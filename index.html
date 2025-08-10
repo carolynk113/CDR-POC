@@ -1,35 +1,75 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CDR POC</title>
+  <meta charset="UTF-8">
+  <title>CDR POC - Add Dog</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h1>CDR POC</h1>
-  <p id="status">Ready</p>
-  <input id="email" type="email" placeholder="you@example.com" />
-  <button id="login">Send Magic Link</button>
-  <div id="authMsg"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = "https://brmqfmnnyxbfzutlhgzz.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI";
+  <h1>CDR Proof of Concept</h1>
 
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <div id="auth-section">
+    <input type="email" id="email" placeholder="Enter your email">
+    <button id="login-btn">Send Magic Link</button>
+  </div>
 
-  document.getElementById("login").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-  const { error } = await sb.auth.signInWithOtp({
-  email,
-  options: { emailRedirectTo: window.location.origin }
-});
-    if (error) {
-      document.getElementById("authMsg").textContent = error.message;
-    } else {
-      document.getElementById("authMsg").textContent = "Magic link sent! Check your email.";
-    }
-  });
-</script>
-</body>
-</html>
+  <div id="app-section" style="display:none;">
+    <p id="user-info"></p>
+    <h2>Add a Dog</h2>
+    <form id="dog-form">
+      <input type="text" id="dog-name" placeholder="Registered Name" required>
+      <select id="dog-sex" required>
+        <option value="">Select Sex</option>
+        <option value="M">Male</option>
+        <option value="F">Female</option>
+      </select>
+      <input type="date" id="dog-dob" required>
+      <button type="submit">Save Dog</button>
+    </form>
+    <h2>Your Dogs</h2>
+    <ul id="dog-list"></ul>
+  </div>
+
+  <script>
+    const sb = supabase.createClient(
+      "https://brmqfmnnyxbfzutlhgzz.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI"
+    );
+
+    // When returning from magic link, exchange code for a session
+    (async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      if (code) {
+        const { error } = await sb.auth.exchangeCodeForSession({ code });
+        if (error) console.error('exchangeCodeForSession:', error.message);
+        // Clean up URL
+        window.history.replaceState({}, document.title, url.origin + url.pathname);
+      }
+    })();
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin }
+      });
+      if (error) {
+        alert(error.message);
+      } else {
+        alert('Magic link sent! Check your email.');
+      }
+    });
+
+    sb.auth.onAuthStateChange(() => refreshUI());
+
+    async function refreshUI() {
+      const { data: { user } } = await sb.auth.getUser();
+      if (user) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-section').style.display = 'block';
+        document.getElementById('user-info').textContent = `Signed in as ${user.email}`;
+        loadDogs();
+      } else {
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-section').style.display = 'none';
