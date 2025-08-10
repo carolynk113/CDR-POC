@@ -11,20 +11,20 @@
   <input id="email" type="email" placeholder="you@example.com" />
   <button id="login">Send Magic Link</button>
   <div id="authMsg"></div>
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const SUPABASE_URL = 'https://brmqfmnnyxbfzutlhgzz.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI';
+  const SUPABASE_URL = "https://brmqfmnnyxbfzutlhgzz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI";
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  document.getElementById('login').addEventListener('click', async () => {
-    const email = document.getElementById('email').value;
+  document.getElementById("login").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
     const { error } = await sb.auth.signInWithOtp({ email });
     if (error) {
-      document.getElementById('authMsg').textContent = error.message;
+      document.getElementById("authMsg").textContent = error.message;
     } else {
-      document.getElementById('authMsg').textContent = 'Magic link sent! Check your email.';
+      document.getElementById("authMsg").textContent = "Magic link sent! Check your email.";
     }
   });
 </script>
