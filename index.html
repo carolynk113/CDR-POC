@@ -20,7 +20,10 @@
 
   document.getElementById("login").addEventListener("click", async () => {
     const email = document.getElementById("email").value;
-    const { error } = await sb.auth.signInWithOtp({ email });
+  const { error } = await sb.auth.signInWithOtp({
+  email,
+  options: { emailRedirectTo: window.location.origin }
+});
     if (error) {
       document.getElementById("authMsg").textContent = error.message;
     } else {
