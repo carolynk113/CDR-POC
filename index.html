@@ -2,330 +2,310 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>CDR — Breeder Portal (POC)</title>
+  <title>CDR — Submit Individual Dog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     :root{
-      /* Warm, purple-forward theme */
-      --bg:#14110f;            /* page background (espresso) */
-      --panel:#1d1816;         /* side panels */
-      --card:#201a18;          /* cards */
-      --ink:#f7f3f0;           /* primary text (linen) */
-      --muted:#cdbfb7;         /* secondary text (warm taupe) */
-      --line:#3a2f2a;          /* borders */
-      --accent:#8b5cf6;        /* primary purple */
-      --accent-2:#f59e0b;      /* warm amber pop */
-      --ok:#10b981;            /* success */
-      --warn:#f59e0b;          /* warning */
-      --err:#ef4444;           /* error */
-      --radius:14px;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#faf7f4; --panel:#ffffff; --ink:#2a1f1b; --muted:#6b554c; --line:#e8dfda;
+      --accent:#7c3aed; --accent-2:#b48cfb; --radius:14px; --shadow:0 8px 24px rgba(60,40,30,.08);
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(139,92,246,.16), transparent 60%),
-        radial-gradient(1000px 800px at 100% 0%, rgba(245,158,11,.10), transparent 55%),
-        linear-gradient(180deg, #12100e, #181310);
-      color:var(--ink);
-      font:16px/1.5 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
-    .shell{max-width:1100px;margin:32px auto;padding:0 16px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .brand{display:flex;gap:12px;align-items:center;font-weight:700;letter-spacing:.3px;font-size:18px}
-    .logo{width:36px;height:36px;border-radius:10px;background:
-      radial-gradient(120% 120% at 0% 0%, var(--accent) 0%, #6d28d9 60%, #4f46e5 100%);
-      box-shadow:0 8px 20px rgba(124,58,237,.35)}
-    .user{font-size:14px;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:280px 1fr;gap:16px}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
-    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
-    .panel{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
-    .menu .btn{
-      display:flex; align-items:center; gap:12px; border:1px solid #4a3a34; padding:14px 16px; border-radius:12px;
-      background:#1b1614; color:var(--ink); cursor:pointer; width:100%;
-      transition:transform .04s ease, border-color .2s ease
-    }
-    .menu .btn:hover{ transform: translateY(-1px); border-color:#6b554c }
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:#1b1614;border:1px solid #4a3a34;color:#e9ded8}
-    h2{margin:0 0 8px}
-    h3{margin:0 0 12px;font-size:16px;color:#e9ded8}
-    .muted{color:var(--muted)}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .row>.col{flex:1 1 220px}
-    label{display:block;font-size:12px;color:#e9ded8;margin:12px 0 6px}
-    input,select,textarea{
-      width:100%;padding:12px;border-radius:12px;border:1px solid #4a3a34;background:#1a1412;color:var(--ink);outline:none}
-    textarea{min-height:96px;resize:vertical}
-    .actions{display:flex;gap:10px;margin-top:12px}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#f7f2ee,#faf7f4);color:var(--ink);
+      font:16px/1.5 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .wrap{max-width:880px;margin:28px auto;padding:0 16px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:700}
+    .logo{width:32px;height:32px;border-radius:10px;background:radial-gradient(120% 120% at 0% 0%, var(--accent), var(--accent-2))}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    label{display:block;font-size:12px;color:#59453e;margin:12px 0 6px}
+    input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #e7ddd7;background:#fff;color:var(--ink)}
+    input[type=file]{padding:8px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}.row>.col{flex:1 1 220px}
+    .actions{display:flex;gap:10px;margin-top:16px}
     .primary{background:linear-gradient(90deg,var(--accent),#6d28d9);color:#fff;border:none;padding:12px 16px;border-radius:12px;cursor:pointer}
-    .secondary{background:transparent;border:1px solid #4a3a34;color:#e9ded8;padding:12px 16px;border-radius:12px;cursor:pointer}
-    .badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid #4a3a34}
-    .ok{background:rgba(16,185,129,.12);color:#bbf7d0;border-color:#22c55e}
-    .warn{background:rgba(245,158,11,.12);color:#fde68a;border-color:#f59e0b}
-    .err{background:rgba(239,68,68,.12);color:#fecaca;border-color:#ef4444}
-    .crumbs{font-size:12px;color:#cdbfb7;margin-bottom:6px}
-    .hidden{display:none!important}
-    /* simple pedigree tree scaffolding (name + thumbnail) */
-    .tree{--gap:10px; display:grid; grid-template-columns:repeat(5,1fr); gap:var(--gap)}
-    .node{border:1px solid var(--line); border-radius:12px; padding:10px; background:#1b1614; display:flex; gap:10px; align-items:center}
-    .node img{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #4a3a34;background:#120e0c}
-    .ghost{opacity:.6;font-style:italic}
+    .secondary{background:#fff;border:1px solid #e7ddd7;color:#3a2b26;padding:12px 16px;border-radius:12px;cursor:pointer}
+    .muted{color:var(--muted)} .hidden{display:none}
+    .req{background:#fcf9f7;border:1px solid #efe6e1;border-radius:12px;padding:12px;margin-top:8px}
+    .thumbs{display:flex;gap:10px;align-items:center}
+    .thumbs img{width:60px;height:60px;object-fit:cover;border-radius:10px;border:1px solid #e8dfda}
+    .toast{position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid var(--line);padding:10px 12px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(6px);transition:.2s}
+    .toast.show{opacity:1;transform:translateY(0)}
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        CDR — Companion Dog Registry
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="logo"></div> CDR — Submit Individual Dog</div>
+    <div id="userBadge" class="muted">Checking sign‑in…</div>
+  </header>
+
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <label>Breed content</label>
+        <select id="breedKey"></select>
       </div>
-      <div class="user">Breeder: <strong>Sunrise Kennels</strong> <span class="pill">approved</span></div>
-    </header>
+      <div class="col">
+        <label>Category</label>
+        <select id="category">
+          <option>Full</option>
+          <option>Limited</option>
+          <option>Unregistered Parent</option>
+        </select>
+      </div>
+    </div>
 
-    <div class="grid">
-      <!-- Left: Navigation -->
-      <aside class="card">
-        <h2>What are you doing today?</h2>
-        <p class="muted" style="margin-top:6px">Choose a workflow to start.</p>
-        <div class="menu" style="margin-top:12px; display:grid; gap:10px;">
-          <button class="btn" data-route="register-dog">🐶 <div><strong>Submit an Individual Dog</strong><div class="muted">Full / Limited / Unregistered Parent</div></div></button>
-          <button class="btn" data-route="register-litter">🍼 <div><strong>Register a Litter</strong><div class="muted">Link sire & dam; create pups</div></div></button>
-          <button class="btn" data-route="view-dogs">📚 <div><strong>My Dogs</strong><div class="muted">View, pedigree, documents</div></div></button>
-          <button class="btn" data-route="help">❓ <div><strong>Help & Requirements</strong><div class="muted">Categories, testing, and rules</div></div></button>
+    <div id="reqBox" class="req hidden">
+      <div style="font-weight:600">Requirements</div>
+      <div id="reqText" class="muted" style="margin-top:6px"></div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Registered name</label>
+        <input id="regName" placeholder="e.g., Sunrise Maple of Riverbend">
+      </div>
+      <div class="col">
+        <label>Call name</label>
+        <input id="callName" placeholder="Maple">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Sex</label>
+        <select id="sex"><option>female</option><option>male</option><option>unknown</option></select>
+      </div>
+      <div class="col">
+        <label>Date of birth</label>
+        <input id="dob" type="date">
+      </div>
+      <div class="col">
+        <label>Microchip <span class="muted">(required for Full/Limited)</span></label>
+        <input id="microchip" placeholder="15‑digit ISO">
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <label>Photos (two slots). Choose a primary.</label>
+      <div class="row">
+        <div class="col">
+          <input id="photo1" type="file" accept="image/*">
+          <div><label><input type="radio" name="primary" value="1" checked> Make Photo 1 primary</label></div>
         </div>
-
-        <div style="margin-top:18px">
-          <h3>Quick facts</h3>
-          <div class="row">
-            <div class="pill">COI target ≤ 10%</div>
-            <div class="pill">Chip required: Full/Limited</div>
-            <div class="pill">DNA by breed</div>
-          </div>
+        <div class="col">
+          <input id="photo2" type="file" accept="image/*">
+          <div><label><input type="radio" name="primary" value="2"> Make Photo 2 primary</label></div>
         </div>
-      </aside>
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
 
-      <!-- Right: Work area -->
-      <main class="panel" id="work">
-        <!-- Home -->
-        <div id="route-home">
-          <div class="crumbs">Home</div>
-          <h2>Welcome back, Sunrise Kennels</h2>
-          <p class="muted">Start a new registration or manage your existing dogs. Use the menu on the left, or pick a quick action:</p>
-          <div class="row" style="margin-top:10px">
-            <button class="primary" data-route="register-dog">+ Submit an Individual Dog</button>
-            <button class="secondary" data-route="register-litter">+ Register a Litter</button>
-          </div>
+    <div style="margin-top:10px">
+      <label>Health test files/links</label>
+      <div class="row">
+        <div class="col">
+          <select id="htCategory">
+            <option value="hips">Hips</option>
+            <option value="elbows">Elbows</option>
+            <option value="patellas">Patellas</option>
+            <option value="eyes">Eyes</option>
+            <option value="cardiac">Cardiac</option>
+            <option value="dna">DNA</option>
+          </select>
         </div>
-
-        <!-- Register a Dog -->
-        <div id="route-register-dog" class="hidden">
-          <div class="crumbs">Home / Submit an Individual Dog</div>
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <h2 style="margin:0">Submit an Individual Dog</h2>
-            <span class="badge ok">Approved breeder</span>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <label>What category?</label>
-              <select id="category">
-                <option>Full</option>
-                <option>Limited</option>
-                <option>Unregistered Parent</option>
-                <option>Ancestor</option>
-              </select>
-            </div>
-            <div class="col">
-              <label>Breed content</label>
-              <input id="breedContent" placeholder="e.g., 100% Cavalier; or mix" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <label>Registered name</label>
-              <input id="regName" placeholder="e.g., Sunrise Maple of Riverbend" />
-            </div>
-            <div class="col">
-              <label>Call name</label>
-              <input id="callName" placeholder="Maple" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <label>Sex</label>
-              <select id="sex">
-                <option>female</option><option>male</option><option>unknown</option>
-              </select>
-            </div>
-            <div class="col">
-              <label>Date of birth</label>
-              <input id="dob" type="date" />
-            </div>
-            <div class="col">
-              <label>Microchip <span class="muted">(required for Full/Limited)</span></label>
-              <input id="microchip" placeholder="15-digit ISO" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <label>Sire (optional)</label>
-              <select id="sire"><option value="">— none —</option></select>
-            </div>
-            <div class="col">
-              <label>Dam (optional)</label>
-              <select id="dam"><option value="">— none —</option></select>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="secondary" data-route="home">Cancel</button>
-            <button class="primary" id="submitDogBtn">Submit for Registrar Review</button>
-          </div>
-
-          <div id="reqs" class="muted" style="margin-top:10px">
-            <!-- requirement hints appear here based on breed/category -->
-          </div>
+        <div class="col">
+          <select id="htMethod">
+            <option value="ofa">OFA</option>
+            <option value="pennhip">PennHIP</option>
+            <option value="advanced_echo">Advanced (Echo)</option>
+            <option value="basic_auscultation">Basic (Auscultation)</option>
+            <option value="other">Other</option>
+          </select>
         </div>
-
-        <!-- Register a Litter -->
-        <div id="route-register-litter" class="hidden">
-          <div class="crumbs">Home / Register a Litter</div>
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <h2 style="margin:0">Register a Litter</h2>
-            <span class="badge ok">Approved breeder</span>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <label>Sire</label>
-              <select id="lSire"><option value="">— select sire —</option></select>
-            </div>
-            <div class="col">
-              <label>Dam</label>
-              <select id="lDam"><option value="">— select dam —</option></select>
-            </div>
-            <div class="col">
-              <label>Whelping date</label>
-              <input id="lDate" type="date" />
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="secondary" data-route="home">Cancel</button>
-            <button class="primary" id="submitLitterBtn">Submit Litter for Review</button>
-          </div>
+        <div class="col">
+          <input id="htLink" placeholder="(optional) paste external link">
         </div>
-
-        <!-- My Dogs -->
-        <div id="route-view-dogs" class="hidden">
-          <div class="crumbs">Home / My Dogs</div>
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <h2 style="margin:0">My Dogs</h2>
-            <span class="badge">sample data</span>
-          </div>
-
-          <div id="dogsList" class="row" style="margin-top:8px"></div>
-
-          <h3 style="margin-top:18px">Pedigree (5‑generation, name + primary photo)</h3>
-          <div id="pedigreeTree" class="tree">
-            <!-- nodes will render here; this is a static scaffold for now -->
-            <div class="node"><img src="" alt=""><div>Dog (you select)</div></div>
-            <div class="node ghost"><img src="" alt=""><div>Sire</div></div>
-            <div class="node ghost"><img src="" alt=""><div>Dam</div></div>
-            <div class="node ghost"><img src="" alt=""><div>GSire</div></div>
-            <div class="node ghost"><img src="" alt=""><div>GDam</div></div>
-          </div>
+        <div class="col">
+          <input id="htFile" type="file" accept=".pdf,image/*">
         </div>
+      </div>
+      <button class="secondary" id="addHealthBtn">Attach Health Evidence</button>
+      <div id="healthList" class="muted" style="margin-top:8px"></div>
+    </div>
 
-        <!-- Help -->
-        <div id="route-help" class="hidden">
-          <div class="crumbs">Home / Help & Requirements</div>
-          <h2>Requirements (summary)</h2>
-          <ul>
-            <li><span class="badge">Full</span> health tests by breed content; temperament; M ≥15mo, F ≥2y or 3rd heat</li>
-            <li><span class="badge">Limited</span> chip required; may not parent CDR litter until upgraded</li>
-            <li><span class="badge">Unregistered Parent</span> linked only as parent; not registered</li>
-            <li><span class="badge">Ancestor</span> only as parent of an existing registered dog</li>
-          </ul>
-        </div>
-      </main>
+    <div class="actions">
+      <button class="secondary" id="cancelBtn">Cancel</button>
+      <button class="primary" id="submitBtn">Submit for Registrar Review</button>
     </div>
   </div>
 
-  <script>
-    // Simple router (mock)
-    const routes = ['home','register-dog','register-litter','view-dogs','help'];
-    const show = r => routes.forEach(id => {
-      document.getElementById(`route-${id}`)?.classList.toggle('hidden', id!==r);
+  <div id="toast" class="toast">Saved</div>
+</div>
+
+<script>
+  // ===== CONFIG: use your existing values =====
+  const SUPABASE_URL = "https://brmqfmnnyxbfzutlhgzz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = id => document.getElementById(id);
+  const toast = msg => { const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1500); };
+
+  let user=null, personId=null;
+  let breedMap = {}; // breed_key -> display_name + requirements
+  let photo1Url=null, photo2Url=null;
+  let healthEvidence = []; // {category, method, url, note}
+
+  async function initAuth(){
+    const { data:{ user: u } } = await sb.auth.getUser();
+    user = u;
+    if(!user){ $('userBadge').textContent = 'Not signed in — use the magic link page first.'; return; }
+    $('userBadge').textContent = `Signed in: ${user.email}`;
+    // get your People row
+    const { data:people } = await sb.from('people').select('id,name').eq('auth_user_id', user.id).maybeSingle();
+    if(!people){ $('userBadge').textContent += ' (no people row)'; return; }
+    personId = people.id;
+  }
+
+  async function loadBreeds(){
+    const { data, error } = await sb.from('breed_rules').select('breed_key, display_name, requirements').order('display_name');
+    if(error){ console.error(error); return; }
+    const sel = $('breedKey'); sel.innerHTML='';
+    data.forEach(row=>{
+      breedMap[row.breed_key] = { name: row.display_name, req: row.requirements };
+      const opt = document.createElement('option');
+      opt.value = row.breed_key; opt.textContent = row.display_name;
+      sel.appendChild(opt);
     });
-    document.body.addEventListener('click',(e)=>{
-      const btn = e.target.closest('[data-route]'); if(!btn) return;
-      show(btn.getAttribute('data-route'));
-    });
-    show('home');
+    updateRequirements();
+  }
 
-    // Mock requirements hint by category
-    const categoryEl = document.getElementById('category');
-    const reqs = document.getElementById('reqs');
-    function updateReqs(){
-      const c = categoryEl.value;
-      if(c==='Full'){
-        reqs.textContent = 'Full: chip required; temperament; health tests vary by breed content (will be prompted).';
-      } else if(c==='Limited'){
-        reqs.textContent = 'Limited: chip required; used while dog is too young or tests incomplete.';
-      } else if(c==='Unregistered Parent'){
-        reqs.textContent = 'Unregistered Parent: not owned by you; used only as a parent in a litter; not registered.';
-      } else if(c==='Ancestor'){
-        reqs.textContent = 'Ancestor: only as parent of an already-registered dog.';
-      }
+  function updateRequirements(){
+    const bk = $('breedKey').value;
+    const cat = $('category').value;
+    const rule = breedMap[bk]?.req?.[cat.toLowerCase()] || null;
+    if(!rule){ $('reqBox').classList.add('hidden'); return; }
+    const tests = (rule.tests||[]).map(t=>t.replaceAll('_',' ').toUpperCase()).join(', ');
+    const parts = [];
+    if(tests) parts.push(`<strong>Health tests:</strong> ${tests}`);
+    if(rule.age){
+      const a = rule.age, bits=[];
+      if(a.male_months_min) bits.push(`M ≥ ${a.male_months_min} months`);
+      if(a.female_years_min) bits.push(`F ≥ ${a.female_years_min} years`);
+      if(a.female_third_heat) bits.push(`F ≥ 3rd heat`);
+      if(bits.length) parts.push(`<strong>Age:</strong> ${bits.join('; ')}`);
     }
-    categoryEl.addEventListener('change', updateReqs); updateReqs();
+    if(rule.notes) parts.push(`<em>${rule.notes}</em>`);
+    $('reqText').innerHTML = parts.join('<br>');
+    $('reqBox').classList.remove('hidden');
+  }
 
-    // Mock sire/dam lists for selects
-    const dogOpts = [
-      {id:'d1', name:'Riverbend Orion', sex:'male'},
-      {id:'d2', name:'Sunrise Willow', sex:'female'},
-      {id:'d3', name:'Prairie Nala', sex:'female'},
-      {id:'d4', name:'Northstar Kato', sex:'male'}
-    ];
-    function fillParents(){
-      const sire = document.getElementById('sire');
-      const dam  = document.getElementById('dam');
-      const lSire= document.getElementById('lSire');
-      const lDam = document.getElementById('lDam');
-      [sire,dam,lSire,lDam].forEach(sel=> sel.innerHTML = '<option value="">— none —</option>');
-      dogOpts.forEach(d=>{
-        const opt = document.createElement('option');
-        opt.value = d.id; opt.textContent = `${d.name} (${d.sex})`;
-        if(d.sex==='male'){ document.getElementById('sire').appendChild(opt.cloneNode(true));
-                            document.getElementById('lSire').appendChild(opt.cloneNode(true)); }
-        else { document.getElementById('dam').appendChild(opt.cloneNode(true));
-               document.getElementById('lDam').appendChild(opt.cloneNode(true)); }
-      });
+  $('breedKey').addEventListener('change', updateRequirements);
+  $('category').addEventListener('change', updateRequirements);
+
+  // Photo previews + upload helper
+  function preview(file, slot){
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = document.createElement('img');
+      img.src = reader.result; $('thumbs').appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadTo(bucket, file, prefix){
+    const ext = file.name.split('.').pop();
+    const path = `${user.id}/${prefix}-${Date.now()}.${ext}`;
+    const { data, error } = await sb.storage.from(bucket).upload(path, file, { upsert:false });
+    if(error){ throw error; }
+    if(bucket==='dog-photos'){
+      // public bucket: get public URL
+      const { data:{ publicUrl } } = sb.storage.from(bucket).getPublicUrl(path);
+      return publicUrl;
     }
-    fillParents();
+    // private bucket: create a signed URL valid for a long time (e.g., 7 days)
+    const { data: signed, error: e2 } = await sb.storage.from(bucket).createSignedUrl(path, 60*60*24*7);
+    if(e2) throw e2;
+    return signed.signedUrl;
+  }
 
-    // Button stubs
-    document.getElementById('submitDogBtn').addEventListener('click', ()=>{
-      const cat = categoryEl.value;
-      const chip = document.getElementById('microchip').value.trim();
+  $('photo1').addEventListener('change', (e)=>{ $('thumbs').innerHTML=''; if(e.target.files[0]) preview(e.target.files[0],1); if($('photo2').files[0]) preview($('photo2').files[0],2); });
+  $('photo2').addEventListener('change', (e)=>{ $('thumbs').innerHTML=''; if($('photo1').files[0]) preview($('photo1').files[0],1); if(e.target.files[0]) preview(e.target.files[0],2); });
+
+  $('addHealthBtn').addEventListener('click', async ()=>{
+    const cat = $('htCategory').value;
+    const method = $('htMethod').value;
+    const link = $('htLink').value.trim();
+    const file = $('htFile').files[0] || null;
+    let url = link || null;
+    try{
+      if(file){ url = await uploadTo('health-docs', file, `health-${cat}-${method}`); }
+      if(!url){ toast('Attach a file or add a link'); return; }
+      healthEvidence.push({ category: cat, method, url });
+      $('healthList').textContent = `Attached: ${healthEvidence.length} item(s)`;
+      $('htLink').value=''; $('htFile').value='';
+      toast('Health evidence attached');
+    }catch(err){ console.error(err); toast('Upload failed'); }
+  });
+
+  $('submitBtn').addEventListener('click', async ()=>{
+    try{
+      if(!user || !personId){ alert('Not signed in.'); return; }
+
+      const cat = $('category').value;
+      const chip = $('microchip').value.trim();
       if((cat==='Full'||cat==='Limited') && !chip){ alert('Microchip required for Full/Limited.'); return; }
-      alert('Submitted for registrar review (mock).');
-    });
-    document.getElementById('submitLitterBtn').addEventListener('click', ()=>{
-      if(!document.getElementById('lSire').value || !document.getElementById('lDam').value){
-        alert('Sire and Dam are required.'); return;
-      }
-      alert('Litter submitted for registrar review (mock).');
-    });
-  </script>
+
+      // Upload photos if selected
+      const p1 = $('photo1').files[0] || null;
+      const p2 = $('photo2').files[0] || null;
+      photo1Url = p1 ? await uploadTo('dog-photos', p1, 'photo1') : null;
+      photo2Url = p2 ? await uploadTo('dog-photos', p2, 'photo2') : null;
+
+      const primary = (document.querySelector('input[name=primary]:checked')?.value || '1');
+      let photo_primary_url = primary==='1' ? photo1Url : photo2Url;
+      let photo_secondary_url = primary==='1' ? photo2Url : photo1Url;
+
+      const payload = {
+        breeder_person_id: personId,
+        category: cat,
+        breed_key: $('breedKey').value,
+        registered_name: $('regName').value.trim(),
+        call_name: $('callName').value.trim(),
+        sex: $('sex').value,
+        dob: $('dob').value || null,
+        microchip: chip || null,
+        photo_primary_url, photo_secondary_url,
+        health_docs: healthEvidence
+      };
+
+      // basic checks
+      if(!payload.registered_name){ alert('Registered name required.'); return; }
+
+      const { data, error } = await sb.from('dog_submissions').insert(payload).select().single();
+      if(error){ throw error; }
+      toast('Submitted for registrar review.');
+      // reset
+      ['regName','callName','microchip','htLink'].forEach(id=>$(id).value='');
+      $('photo1').value=''; $('photo2').value=''; $('htFile').value='';
+      $('thumbs').innerHTML=''; healthEvidence = []; $('healthList').textContent='';
+    }catch(err){
+      console.error(err);
+      alert('Submit failed: ' + (err.message || err));
+    }
+  });
+
+  $('cancelBtn').addEventListener('click', ()=>location.reload());
+
+  // boot
+  (async function(){
+    await initAuth();
+    await loadBreeds();
+  })();
+</script>
 </body>
 </html>
+
 
