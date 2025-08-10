@@ -47,20 +47,25 @@
         window.history.replaceState({}, document.title, url.origin + url.pathname);
       }
     })();
-
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const { error } = await sb.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.origin }
-      });
-      if (error) {
-        alert(error.message);
-      } else {
-        alert('Magic link sent! Check your email.');
-      }
+<script>
+// replace your current click handler with this
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value;
+  console.log('[auth] sending OTP to', email);
+  try {
+    const { data, error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin }
     });
-
+    console.log('[auth] result', { data, error });
+    alert(error ? `ERROR: ${error.message}` : 'Magic link sent! Check your email.');
+  } catch (e) {
+    console.error(e);
+    alert(`ERROR: ${e.message}`);
+  }
+});
+</script>
+  
     sb.auth.onAuthStateChange(() => refreshUI());
 
     async function refreshUI() {
