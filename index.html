@@ -2,470 +2,329 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>CDR — Breeder Portal (Mock)</title>
+  <title>CDR — Breeder Portal (POC)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0b1020; --panel:#0f162f; --card:#121b3b; --muted:#9aa4c7;
-      --text:#eaf0ff; --accent:#7aa2ff; --ok:#34d399; --warn:#f59e0b; --err:#ef4444;
-      --bd:rgba(255,255,255,.08); --shadow:0 10px 30px rgba(3,7,18,.35)
+      /* Warm, purple-forward theme */
+      --bg:#14110f;            /* page background (espresso) */
+      --panel:#1d1816;         /* side panels */
+      --card:#201a18;          /* cards */
+      --ink:#f7f3f0;           /* primary text (linen) */
+      --muted:#cdbfb7;         /* secondary text (warm taupe) */
+      --line:#3a2f2a;          /* borders */
+      --accent:#8b5cf6;        /* primary purple */
+      --accent-2:#f59e0b;      /* warm amber pop */
+      --ok:#10b981;            /* success */
+      --warn:#f59e0b;          /* warning */
+      --err:#ef4444;           /* error */
+      --radius:14px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-         background:linear-gradient(145deg,#0a0e1d,#0b1126 30%,#0a1130 70%); color:var(--text)}
-    .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .brand{display:flex;gap:10px;align-items:center}
-    .brand .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#243b86,#7aa2ff);
-      box-shadow:0 6px 16px rgba(122,162,255,.35)}
-    h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.2px}
-    .badge{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--bd);color:var(--muted)}
-    .shell{display:grid;grid-template-columns: 1.2fr .8fr; gap:16px}
-    .panel{background:var(--panel); border:1px solid var(--bd); border-radius:14px; padding:16px; box-shadow:var(--shadow)}
-    .card{background:var(--card); border:1px solid var(--bd); border-radius:14px; padding:16px; box-shadow:var(--shadow); margin-bottom:12px}
+    body{
+      margin:0; background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(139,92,246,.16), transparent 60%),
+        radial-gradient(1000px 800px at 100% 0%, rgba(245,158,11,.10), transparent 55%),
+        linear-gradient(180deg, #12100e, #181310);
+      color:var(--ink);
+      font:16px/1.5 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    .shell{max-width:1100px;margin:32px auto;padding:0 16px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand{display:flex;gap:12px;align-items:center;font-weight:700;letter-spacing:.3px;font-size:18px}
+    .logo{width:36px;height:36px;border-radius:10px;background:
+      radial-gradient(120% 120% at 0% 0%, var(--accent) 0%, #6d28d9 60%, #4f46e5 100%);
+      box-shadow:0 8px 20px rgba(124,58,237,.35)}
+    .user{font-size:14px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:280px 1fr;gap:16px}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
+    .menu .btn{
+      display:flex; align-items:center; gap:12px; border:1px solid #4a3a34; padding:14px 16px; border-radius:12px;
+      background:#1b1614; color:var(--ink); cursor:pointer; width:100%;
+      transition:transform .04s ease, border-color .2s ease
+    }
+    .menu .btn:hover{ transform: translateY(-1px); border-color:#6b554c }
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:#1b1614;border:1px solid #4a3a34;color:#e9ded8}
+    h2{margin:0 0 8px}
+    h3{margin:0 0 12px;font-size:16px;color:#e9ded8}
     .muted{color:var(--muted)}
-    .row{display:flex; gap:12px; flex-wrap:wrap}
-    .row>div{flex:1 1 220px}
-    label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
-    input,select,textarea{width:100%; background:#0e1633; color:var(--text); border:1px solid var(--bd);
-      border-radius:12px; padding:10px 12px; font-size:15px; outline:none}
-    textarea{min-height:96px; resize:vertical}
-    .btn{display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:#07102a; border:none;
-      border-radius:12px; padding:10px 14px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px rgba(122,162,255,.35)}
-    .btn.secondary{background:transparent; color:var(--text); border:1px solid var(--bd); box-shadow:none}
-    .btn.ghost{background:transparent; color:var(--muted); border:none}
-    .menu{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px}
-    .tile{background:var(--card); border:1px solid var(--bd); border-radius:14px; padding:16px; cursor:pointer;
-      transition:transform .15s ease, border-color .15s ease}
-    .tile:hover{transform:translateY(-2px); border-color:#2a3f82}
-    .title{font-weight:700; margin-bottom:6px}
-    .chips{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--bd); color:var(--muted)}
-    .hr{height:1px;background:var(--bd);margin:12px 0}
-    .topnote{font-size:13px; color:var(--muted)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .right h3{margin:0 0 8px}
-    .pill{font-size:12px;padding:2px 8px;border-radius:999px}
-    .pill.ok{background:#063c2f;color:#8ff3d1;border:1px solid #145a48}
-    .pill.warn{background:#412a05;color:#ffd07a;border:1px solid #7a540b}
-    .toast{position:fixed; right:16px; bottom:16px; background:#0d1a3d; border:1px solid var(--bd); color:#dbe7ff;
-      padding:12px 14px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(10px);
-      transition:all .2s ease}
-    .toast.show{opacity:1; transform:translateY(0)}
-    .hidden{display:none}
-    small{color:var(--muted)}
-    .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8aa0dd}
-    .section-title{display:flex;align-items:center;justify-content:space-between}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>.col{flex:1 1 220px}
+    label{display:block;font-size:12px;color:#e9ded8;margin:12px 0 6px}
+    input,select,textarea{
+      width:100%;padding:12px;border-radius:12px;border:1px solid #4a3a34;background:#1a1412;color:var(--ink);outline:none}
+    textarea{min-height:96px;resize:vertical}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .primary{background:linear-gradient(90deg,var(--accent),#6d28d9);color:#fff;border:none;padding:12px 16px;border-radius:12px;cursor:pointer}
+    .secondary{background:transparent;border:1px solid #4a3a34;color:#e9ded8;padding:12px 16px;border-radius:12px;cursor:pointer}
+    .badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid #4a3a34}
+    .ok{background:rgba(16,185,129,.12);color:#bbf7d0;border-color:#22c55e}
+    .warn{background:rgba(245,158,11,.12);color:#fde68a;border-color:#f59e0b}
+    .err{background:rgba(239,68,68,.12);color:#fecaca;border-color:#ef4444}
+    .crumbs{font-size:12px;color:#cdbfb7;margin-bottom:6px}
+    .hidden{display:none!important}
+    /* simple pedigree tree scaffolding (name + thumbnail) */
+    .tree{--gap:10px; display:grid; grid-template-columns:repeat(5,1fr); gap:var(--gap)}
+    .node{border:1px solid var(--line); border-radius:12px; padding:10px; background:#1b1614; display:flex; gap:10px; align-items:center}
+    .node img{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #4a3a34;background:#120e0c}
+    .ghost{opacity:.6;font-style:italic}
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="shell">
     <header>
       <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <div class="kicker">Companion Dog Registry</div>
-          <h1>Breeder Portal (Mock)</h1>
-        </div>
+        <div class="logo" aria-hidden="true"></div>
+        CDR — Companion Dog Registry
       </div>
-      <div>
-        <div class="badge">Signed in as <strong>SilverSky Kennels</strong></div>
-      </div>
+      <div class="user">Breeder: <strong>Sunrise Kennels</strong> <span class="pill">approved</span></div>
     </header>
 
-    <div class="shell">
-      <!-- LEFT: main workflow -->
-      <div class="panel">
-        <div class="section-title">
-          <div>
-            <div class="kicker">Start</div>
-            <div style="font-weight:700;margin-top:4px">What are you doing today?</div>
-          </div>
-          <button class="btn ghost" id="restartBtn">Restart</button>
+    <div class="grid">
+      <!-- Left: Navigation -->
+      <aside class="card">
+        <h2>What are you doing today?</h2>
+        <p class="muted" style="margin-top:6px">Choose a workflow to start.</p>
+        <div class="menu" style="margin-top:12px; display:grid; gap:10px;">
+          <button class="btn" data-route="register-dog">🐶 <div><strong>Submit an Individual Dog</strong><div class="muted">Full / Limited / Unregistered Parent</div></div></button>
+          <button class="btn" data-route="register-litter">🍼 <div><strong>Register a Litter</strong><div class="muted">Link sire & dam; create pups</div></div></button>
+          <button class="btn" data-route="view-dogs">📚 <div><strong>My Dogs</strong><div class="muted">View, pedigree, documents</div></div></button>
+          <button class="btn" data-route="help">❓ <div><strong>Help & Requirements</strong><div class="muted">Categories, testing, and rules</div></div></button>
         </div>
 
-        <div id="stepMenu" class="card">
-          <div class="menu">
-            <div class="tile" data-action="register-dog">
-              <div class="title">Register a Dog</div>
-              <div class="muted">Submit a single dog for registrar approval.</div>
-              <div class="chips" style="margin-top:8px">
-                <div class="chip">Full</div><div class="chip">Limited</div><div class="chip">Unregistered Parent</div><div class="chip">Ancestor</div>
-              </div>
-            </div>
-            <div class="tile" data-action="register-litter">
-              <div class="title">Register a Litter</div>
-              <div class="muted">Link sire + dam; add whelping date and notes.</div>
-              <div class="chips" style="margin-top:8px">
-                <div class="chip">Parentage</div><div class="chip">COI</div><div class="chip">Documentation</div>
-              </div>
-            </div>
-            <div class="tile" data-action="view-dogs">
-              <div class="title">View My Dogs</div>
-              <div class="muted">See dogs you’ve registered or had approved.</div>
-              <div class="chips" style="margin-top:8px">
-                <div class="chip">Pedigree</div><div class="chip">Docs</div><div class="chip">Health</div>
-              </div>
-            </div>
+        <div style="margin-top:18px">
+          <h3>Quick facts</h3>
+          <div class="row">
+            <div class="pill">COI target ≤ 10%</div>
+            <div class="pill">Chip required: Full/Limited</div>
+            <div class="pill">DNA by breed</div>
           </div>
         </div>
+      </aside>
 
-        <!-- Register a Dog: choose category -->
-        <div id="stepDogCategory" class="card hidden">
-          <div class="kicker">Dog Registration</div>
-          <div class="row" style="align-items:center;justify-content:space-between">
-            <div style="font-weight:700;font-size:18px">Select a registration category</div>
-            <button class="btn secondary" id="backToMenu1">Back</button>
-          </div>
-          <div class="menu" style="margin-top:8px">
-            <div class="tile cat" data-cat="Full">
-              <div class="title">Full</div>
-              <div class="muted">Breeding eligible; stricter requirements (microchip required).</div>
-            </div>
-            <div class="tile cat" data-cat="Limited">
-              <div class="title">Limited</div>
-              <div class="muted">Non‑breeding registration; microchip required.</div>
-            </div>
-            <div class="tile cat" data-cat="Unregistered Parent">
-              <div class="title">Unregistered Parent</div>
-              <div class="muted">Used as a parent in pedigrees; flexible proof.</div>
-            </div>
-            <div class="tile cat" data-cat="Ancestor">
-              <div class="title">Ancestor</div>
-              <div class="muted">Historical/legacy ancestor entry.</div>
-            </div>
+      <!-- Right: Work area -->
+      <main class="panel" id="work">
+        <!-- Home -->
+        <div id="route-home">
+          <div class="crumbs">Home</div>
+          <h2>Welcome back, Sunrise Kennels</h2>
+          <p class="muted">Start a new registration or manage your existing dogs. Use the menu on the left, or pick a quick action:</p>
+          <div class="row" style="margin-top:10px">
+            <button class="primary" data-route="register-dog">+ Submit an Individual Dog</button>
+            <button class="secondary" data-route="register-litter">+ Register a Litter</button>
           </div>
         </div>
 
-        <!-- Register a Dog: form -->
-        <div id="stepDogForm" class="card hidden">
-          <div class="row" style="align-items:center;justify-content:space-between">
-            <div>
-              <div class="kicker">Dog Registration — <span id="dogCatLabel">Category</span></div>
-              <div style="font-weight:700;font-size:18px;margin-top:4px">Enter dog details</div>
-            </div>
-            <div class="row" style="gap:8px">
-              <button class="btn secondary" id="backToCat">Change category</button>
-              <button class="btn ghost" id="clearDogForm">Clear</button>
-            </div>
+        <!-- Register a Dog -->
+        <div id="route-register-dog" class="hidden">
+          <div class="crumbs">Home / Submit an Individual Dog</div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h2 style="margin:0">Submit an Individual Dog</h2>
+            <span class="badge ok">Approved breeder</span>
           </div>
 
           <div class="row">
-            <div>
-              <label>Registered name</label>
-              <input id="regName" placeholder="e.g., SilverSky Winter Comet" />
-            </div>
-            <div>
-              <label>Call name</label>
-              <input id="callName" placeholder="e.g., Comet" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>Sex</label>
-              <select id="sex">
-                <option value="female">female</option>
-                <option value="male">male</option>
-                <option value="unknown">unknown</option>
+            <div class="col">
+              <label>What category?</label>
+              <select id="category">
+                <option>Full</option>
+                <option>Limited</option>
+                <option>Unregistered Parent</option>
+                <option>Ancestor</option>
               </select>
             </div>
-            <div>
+            <div class="col">
+              <label>Breed content</label>
+              <input id="breedContent" placeholder="e.g., 100% Cavalier; or mix" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Registered name</label>
+              <input id="regName" placeholder="e.g., Sunrise Maple of Riverbend" />
+            </div>
+            <div class="col">
+              <label>Call name</label>
+              <input id="callName" placeholder="Maple" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Sex</label>
+              <select id="sex">
+                <option>female</option><option>male</option><option>unknown</option>
+              </select>
+            </div>
+            <div class="col">
               <label>Date of birth</label>
               <input id="dob" type="date" />
             </div>
-            <div>
-              <label>Microchip <span id="chipReq" class="pill warn" style="margin-left:6px;display:none">required</span></label>
-              <input id="microchip" placeholder="Required for Full/Limited" />
+            <div class="col">
+              <label>Microchip <span class="muted">(required for Full/Limited)</span></label>
+              <input id="microchip" placeholder="15-digit ISO" />
             </div>
           </div>
 
           <div class="row">
-            <div>
+            <div class="col">
               <label>Sire (optional)</label>
-              <select id="sire"></select>
+              <select id="sire"><option value="">— none —</option></select>
             </div>
-            <div>
+            <div class="col">
               <label>Dam (optional)</label>
-              <select id="dam"></select>
+              <select id="dam"><option value="">— none —</option></select>
             </div>
           </div>
 
-          <div class="hr"></div>
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <small class="muted">POC rules: microchip is required for <strong>Full</strong> and <strong>Limited</strong>. Parents can be linked if already in your dog list.</small>
-            <button class="btn" id="submitDog">Submit for registrar review</button>
+          <div class="actions">
+            <button class="secondary" data-route="home">Cancel</button>
+            <button class="primary" id="submitDogBtn">Submit for Registrar Review</button>
+          </div>
+
+          <div id="reqs" class="muted" style="margin-top:10px">
+            <!-- requirement hints appear here based on breed/category -->
           </div>
         </div>
 
         <!-- Register a Litter -->
-        <div id="stepLitter" class="card hidden">
-          <div class="row" style="align-items:center;justify-content:space-between">
-            <div>
-              <div class="kicker">Litter Registration</div>
-              <div style="font-weight:700;font-size:18px;margin-top:4px">Link parents and whelping details</div>
-            </div>
-            <button class="btn secondary" id="backToMenu2">Back</button>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>Sire</label>
-              <select id="lSire"></select>
-            </div>
-            <div>
-              <label>Dam</label>
-              <select id="lDam"></select>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label>Whelping date</label>
-              <input id="whelp" type="date" />
-            </div>
-            <div>
-              <label>Notes (optional)</label>
-              <input id="lNotes" placeholder="e.g., Assisted delivery, 6F/3M" />
-            </div>
-          </div>
-
-          <div class="hr"></div>
+        <div id="route-register-litter" class="hidden">
+          <div class="crumbs">Home / Register a Litter</div>
           <div class="row" style="justify-content:space-between;align-items:center">
-            <small class="muted">POC rules: sire and dam must be set; COI and health checks would run server-side.</small>
-            <button class="btn" id="submitLitter">Submit litter for registrar review</button>
+            <h2 style="margin:0">Register a Litter</h2>
+            <span class="badge ok">Approved breeder</span>
           </div>
-        </div>
 
-        <!-- View Dogs (mock list) -->
-        <div id="stepDogs" class="card hidden">
-          <div class="row" style="align-items:center;justify-content:space-between">
-            <div>
-              <div class="kicker">My Dogs</div>
-              <div style="font-weight:700;font-size:18px;margin-top:4px">Dogs linked to this breeder</div>
+          <div class="row">
+            <div class="col">
+              <label>Sire</label>
+              <select id="lSire"><option value="">— select sire —</option></select>
             </div>
-            <button class="btn secondary" id="backToMenu3">Back</button>
+            <div class="col">
+              <label>Dam</label>
+              <select id="lDam"><option value="">— select dam —</option></select>
+            </div>
+            <div class="col">
+              <label>Whelping date</label>
+              <input id="lDate" type="date" />
+            </div>
           </div>
 
-          <div id="dogList" class="grid2" style="margin-top:8px"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT: live summary / preview -->
-      <div class="panel right">
-        <h3 style="margin-top:0">Summary</h3>
-        <div class="card" id="summaryCard">
-          <div id="summaryEmpty" class="muted">Pick an action to see details here.</div>
-
-          <div id="summaryDog" class="hidden">
-            <div class="kicker">Submitting Dog</div>
-            <div style="font-weight:700;margin:6px 0" id="sCat">—</div>
-            <div class="hr"></div>
-            <div><strong>Registered name:</strong> <span id="sReg">—</span></div>
-            <div><strong>Call name:</strong> <span id="sCall">—</span></div>
-            <div><strong>Sex:</strong> <span id="sSex">—</span></div>
-            <div><strong>DOB:</strong> <span id="sDob">—</span></div>
-            <div><strong>Microchip:</strong> <span id="sChip">—</span></div>
-            <div><strong>Sire:</strong> <span id="sSire">—</span></div>
-            <div><strong>Dam:</strong> <span id="sDam">—</span></div>
-          </div>
-
-          <div id="summaryLitter" class="hidden">
-            <div class="kicker">Submitting Litter</div>
-            <div class="hr"></div>
-            <div><strong>Sire:</strong> <span id="lsSire">—</span></div>
-            <div><strong>Dam:</strong> <span id="lsDam">—</span></div>
-            <div><strong>Whelping:</strong> <span id="lsWhen">—</span></div>
-            <div><strong>Notes:</strong> <span id="lsNotes">—</span></div>
+          <div class="actions">
+            <button class="secondary" data-route="home">Cancel</button>
+            <button class="primary" id="submitLitterBtn">Submit Litter for Review</button>
           </div>
         </div>
 
-        <div class="card">
-          <div class="kicker">Rules reflected in this mock</div>
-          <ul class="muted" style="margin-top:8px">
-            <li>Breeder is already signed in/approved (login omitted).</li>
-            <li>Dog categories: Full/Limited require microchip.</li>
-            <li>Parents selectable from breeder’s dog list (mock data here).</li>
-            <li>Submissions go to a registrar for approval (button is a mocked action).</li>
+        <!-- My Dogs -->
+        <div id="route-view-dogs" class="hidden">
+          <div class="crumbs">Home / My Dogs</div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h2 style="margin:0">My Dogs</h2>
+            <span class="badge">sample data</span>
+          </div>
+
+          <div id="dogsList" class="row" style="margin-top:8px"></div>
+
+          <h3 style="margin-top:18px">Pedigree (5‑generation, name + primary photo)</h3>
+          <div id="pedigreeTree" class="tree">
+            <!-- nodes will render here; this is a static scaffold for now -->
+            <div class="node"><img src="" alt=""><div>Dog (you select)</div></div>
+            <div class="node ghost"><img src="" alt=""><div>Sire</div></div>
+            <div class="node ghost"><img src="" alt=""><div>Dam</div></div>
+            <div class="node ghost"><img src="" alt=""><div>GSire</div></div>
+            <div class="node ghost"><img src="" alt=""><div>GDam</div></div>
+          </div>
+        </div>
+
+        <!-- Help -->
+        <div id="route-help" class="hidden">
+          <div class="crumbs">Home / Help & Requirements</div>
+          <h2>Requirements (summary)</h2>
+          <ul>
+            <li><span class="badge">Full</span> health tests by breed content; temperament; M ≥15mo, F ≥2y or 3rd heat</li>
+            <li><span class="badge">Limited</span> chip required; may not parent CDR litter until upgraded</li>
+            <li><span class="badge">Unregistered Parent</span> linked only as parent; not registered</li>
+            <li><span class="badge">Ancestor</span> only as parent of an existing registered dog</li>
           </ul>
         </div>
-      </div>
+      </main>
     </div>
   </div>
 
-  <div id="toast" class="toast">Saved</div>
-
   <script>
-    // ---- Mock breeder and data (would come from DB in real app)
-    const breeder = { id: 'b-123', name: 'SilverSky Kennels', approved: true };
-    const myDogs = [
-      { id:'d1', name:'SilverSky Winter Comet', sex:'male' },
-      { id:'d2', name:'SilverSky Aurora Drift', sex:'female' },
-      { id:'d3', name:'SilverSky Echo North', sex:'female' },
-      { id:'d4', name:'SilverSky Atlas Blue', sex:'male' },
-    ];
+    // Simple router (mock)
+    const routes = ['home','register-dog','register-litter','view-dogs','help'];
+    const show = r => routes.forEach(id => {
+      document.getElementById(`route-${id}`)?.classList.toggle('hidden', id!==r);
+    });
+    document.body.addEventListener('click',(e)=>{
+      const btn = e.target.closest('[data-route]'); if(!btn) return;
+      show(btn.getAttribute('data-route'));
+    });
+    show('home');
 
-    // Populate "My Dogs" page
-    const dogList = document.getElementById('dogList');
-    function renderMyDogs(){
-      dogList.innerHTML = '';
-      myDogs.forEach(d=>{
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:700">${d.name}</div>
-              <div class="muted" style="font-size:13px">${d.sex}</div>
-            </div>
-            <button class="btn secondary" data-viewped="${d.id}">View Pedigree</button>
-          </div>
-        `;
-        dogList.appendChild(card);
-      });
+    // Mock requirements hint by category
+    const categoryEl = document.getElementById('category');
+    const reqs = document.getElementById('reqs');
+    function updateReqs(){
+      const c = categoryEl.value;
+      if(c==='Full'){
+        reqs.textContent = 'Full: chip required; temperament; health tests vary by breed content (will be prompted).';
+      } else if(c==='Limited'){
+        reqs.textContent = 'Limited: chip required; used while dog is too young or tests incomplete.';
+      } else if(c==='Unregistered Parent'){
+        reqs.textContent = 'Unregistered Parent: not owned by you; used only as a parent in a litter; not registered.';
+      } else if(c==='Ancestor'){
+        reqs.textContent = 'Ancestor: only as parent of an already-registered dog.';
+      }
     }
+    categoryEl.addEventListener('change', updateReqs); updateReqs();
 
-    // Populate parent selects
-    function populateParents() {
-      const sireSel = document.getElementById('sire');
-      const damSel  = document.getElementById('dam');
-      const lSire   = document.getElementById('lSire');
-      const lDam    = document.getElementById('lDam');
-      [sireSel, damSel, lSire, lDam].forEach(sel => sel.innerHTML = '<option value="">— none —</option>');
-      myDogs.forEach(d=>{
+    // Mock sire/dam lists for selects
+    const dogOpts = [
+      {id:'d1', name:'Riverbend Orion', sex:'male'},
+      {id:'d2', name:'Sunrise Willow', sex:'female'},
+      {id:'d3', name:'Prairie Nala', sex:'female'},
+      {id:'d4', name:'Northstar Kato', sex:'male'}
+    ];
+    function fillParents(){
+      const sire = document.getElementById('sire');
+      const dam  = document.getElementById('dam');
+      const lSire= document.getElementById('lSire');
+      const lDam = document.getElementById('lDam');
+      [sire,dam,lSire,lDam].forEach(sel=> sel.innerHTML = '<option value="">— none —</option>');
+      dogOpts.forEach(d=>{
         const opt = document.createElement('option');
         opt.value = d.id; opt.textContent = `${d.name} (${d.sex})`;
-        if (d.sex==='male'){ sireSel.appendChild(opt.cloneNode(true)); lSire.appendChild(opt.cloneNode(true)); }
-        else if (d.sex==='female'){ damSel.appendChild(opt.cloneNode(true)); lDam.appendChild(opt.cloneNode(true)); }
+        if(d.sex==='male'){ document.getElementById('sire').appendChild(opt.cloneNode(true));
+                            document.getElementById('lSire').appendChild(opt.cloneNode(true)); }
+        else { document.getElementById('dam').appendChild(opt.cloneNode(true));
+               document.getElementById('lDam').appendChild(opt.cloneNode(true)); }
       });
     }
+    fillParents();
 
-    // Simple router between cards
-    const views = ['stepMenu','stepDogCategory','stepDogForm','stepLitter','stepDogs'];
-    function show(id){
-      views.forEach(v => document.getElementById(v).classList.toggle('hidden', v!==id));
-      // reset summaries
-      if(id==='stepMenu'){
-        document.getElementById('summaryEmpty').classList.remove('hidden');
-        document.getElementById('summaryDog').classList.add('hidden');
-        document.getElementById('summaryLitter').classList.add('hidden');
-      }
-      if(id==='stepDogs'){ renderMyDogs(); }
-      if(id==='stepDogForm'){ updateDogSummary(); }
-      if(id==='stepLitter'){ updateLitterSummary(); }
-    }
-
-    // Toast helper
-    const toast = document.getElementById('toast');
-    function pop(msg){
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(()=>toast.classList.remove('show'), 1600);
-    }
-
-    // Event wiring
-    document.querySelectorAll('#stepMenu .tile').forEach(t=>{
-      t.addEventListener('click', ()=>{
-        const act = t.dataset.action;
-        if(act==='register-dog'){ show('stepDogCategory'); }
-        if(act==='register-litter'){ populateParents(); show('stepLitter'); }
-        if(act==='view-dogs'){ show('stepDogs'); }
-      });
-    });
-    document.getElementById('restartBtn').onclick = ()=>show('stepMenu');
-
-    document.getElementById('backToMenu1').onclick = ()=>show('stepMenu');
-    document.getElementById('backToMenu2').onclick = ()=>show('stepMenu');
-    document.getElementById('backToMenu3').onclick = ()=>show('stepMenu');
-
-    // Category select → Dog form
-    let currentCat = null;
-    document.querySelectorAll('.tile.cat').forEach(tile=>{
-      tile.addEventListener('click', ()=>{
-        currentCat = tile.dataset.cat;
-        document.getElementById('dogCatLabel').textContent = currentCat;
-        document.getElementById('chipReq').style.display = (currentCat==='Full'||currentCat==='Limited') ? 'inline-block' : 'none';
-        populateParents();
-        show('stepDogForm');
-      });
-    });
-
-    // Clear/Back
-    document.getElementById('backToCat').onclick = ()=>show('stepDogCategory');
-    document.getElementById('clearDogForm').onclick = ()=>{
-      ['regName','callName','dob','microchip'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('sex').value='female';
-      document.getElementById('sire').value='';
-      document.getElementById('dam').value='';
-      updateDogSummary();
-    };
-
-    // Live summary updates
-    ['regName','callName','sex','dob','microchip','sire','dam'].forEach(id=>{
-      document.getElementById(id).addEventListener('input', updateDogSummary);
-      document.getElementById(id).addEventListener('change', updateDogSummary);
-    });
-    function updateDogSummary(){
-      document.getElementById('summaryEmpty').classList.add('hidden');
-      document.getElementById('summaryDog').classList.remove('hidden');
-      document.getElementById('summaryLitter').classList.add('hidden');
-      const getName=(id)=> {
-        const sel = document.getElementById(id);
-        if(!sel.value) return '—';
-        return sel.options[sel.selectedIndex].textContent;
-      };
-      document.getElementById('sCat').textContent = currentCat||'—';
-      document.getElementById('sReg').textContent = document.getElementById('regName').value || '—';
-      document.getElementById('sCall').textContent = document.getElementById('callName').value || '—';
-      document.getElementById('sSex').textContent = document.getElementById('sex').value || '—';
-      document.getElementById('sDob').textContent = document.getElementById('dob').value || '—';
-      document.getElementById('sChip').textContent = document.getElementById('microchip').value || '—';
-      document.getElementById('sSire').textContent = getName('sire');
-      document.getElementById('sDam').textContent = getName('dam');
-    }
-
-    // Submit dog (mock)
-    document.getElementById('submitDog').addEventListener('click', ()=>{
+    // Button stubs
+    document.getElementById('submitDogBtn').addEventListener('click', ()=>{
+      const cat = categoryEl.value;
       const chip = document.getElementById('microchip').value.trim();
-      if((currentCat==='Full'||currentCat==='Limited') && !chip){
-        pop('Microchip required for Full/Limited'); return;
-      }
-      if(!document.getElementById('regName').value.trim()){
-        pop('Registered name is required'); return;
-      }
-      pop('Dog submitted for registrar review (mock).');
-      // In real app: POST to /submissions and disable until decision
+      if((cat==='Full'||cat==='Limited') && !chip){ alert('Microchip required for Full/Limited.'); return; }
+      alert('Submitted for registrar review (mock).');
     });
-
-    // Litter live summary
-    ['lSire','lDam','whelp','lNotes'].forEach(id=>{
-      document.getElementById(id).addEventListener('input', updateLitterSummary);
-      document.getElementById(id).addEventListener('change', updateLitterSummary);
-    });
-    function updateLitterSummary(){
-      document.getElementById('summaryEmpty').classList.add('hidden');
-      document.getElementById('summaryDog').classList.add('hidden');
-      document.getElementById('summaryLitter').classList.remove('hidden');
-      const getName=(id)=> {
-        const sel = document.getElementById(id);
-        if(!sel.value) return '—';
-        return sel.options[sel.selectedIndex].textContent;
-      };
-      document.getElementById('lsSire').textContent = getName('lSire');
-      document.getElementById('lsDam').textContent  = getName('lDam');
-      document.getElementById('lsWhen').textContent = document.getElementById('whelp').value || '—';
-      document.getElementById('lsNotes').textContent= document.getElementById('lNotes').value || '—';
-    }
-
-    // Litter submit (mock)
-    document.getElementById('submitLitter').addEventListener('click', ()=>{
+    document.getElementById('submitLitterBtn').addEventListener('click', ()=>{
       if(!document.getElementById('lSire').value || !document.getElementById('lDam').value){
-        pop('Sire and Dam are required'); return;
+        alert('Sire and Dam are required.'); return;
       }
-      pop('Litter submitted for registrar review (mock).');
+      alert('Litter submitted for registrar review (mock).');
     });
-
-    // Boot
-    show('stepMenu');
   </script>
 </body>
 </html>
