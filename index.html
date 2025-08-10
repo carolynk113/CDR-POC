@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CDR POC</title>
+</head>
+<body>
+  <h1>CDR POC</h1>
+  <p id="status">Ready</p>
+  <input id="email" type="email" placeholder="you@example.com" />
+  <button id="login">Send Magic Link</button>
+  <div id="authMsg"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const https://brmqfmnnyxbfzutlhgzz.supabase.co = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI
+';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('login').onclick = async () => {
+      const email = document.getElementById('email').value;
+      const { error } = await sb.auth.signInWithOtp({ email });
+      document.getElementById('authMsg').textContent = error ? error.message : 'Check your email for the magic link.';
+    };
+
+    sb.auth.onAuthStateChange(async (_evt, session) => {
+      if (!session) return;
+      const user = session.user;
+      const { data, error } = await sb.from('profiles').select('status').eq('id', user.id).single();
+      document.getElementById('status').textContent = error ? 'Signed in, but cannot read profile' : 'Signed in. Profile status: ' + data.status;
+    });
+  </script>
+</body>
+</html>
