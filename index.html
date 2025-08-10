@@ -1,80 +1,177 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>CDR POC - Add Dog</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CDR POC</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:24px auto;padding:16px;line-height:1.4}
+    .card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:12px 0}
+    label{display:block;margin:8px 0}
+    input,select,button{padding:8px;font-size:16px}
+    ul{padding-left:18px}
+  </style>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h1>CDR Proof of Concept</h1>
+  <h1>CDR POC</h1>
 
-  <div id="auth-section">
-    <input type="email" id="email" placeholder="Enter your email">
+  <div class="card">
+    <h3>Sign in</h3>
+    <input id="email" type="email" placeholder="you@example.com" />
     <button id="login-btn">Send Magic Link</button>
+    <div id="authMsg" style="margin-top:8px;"></div>
+    <div id="who" style="margin-top:8px; display:none;"></div>
+    <div id="personMsg" style="margin-top:8px; color:#b00; display:none;"></div>
   </div>
 
-  <div id="app-section" style="display:none;">
-    <p id="user-info"></p>
-    <h2>Add a Dog</h2>
-    <form id="dog-form">
-      <input type="text" id="dog-name" placeholder="Registered Name" required>
-      <select id="dog-sex" required>
-        <option value="">Select Sex</option>
-        <option value="M">Male</option>
-        <option value="F">Female</option>
-      </select>
-      <input type="date" id="dog-dob" required>
+  <div id="addDogCard" class="card" style="display:none;">
+    <h3>Add a Dog</h3>
+    <form id="dogForm">
+      <label>Registered name
+        <input id="regName" required />
+      </label>
+      <label>Call name (optional)
+        <input id="callName" />
+      </label>
+      <label>Sex
+        <select id="sex" required>
+          <option value="female">female</option>
+          <option value="male">male</option>
+          <option value="unknown">unknown</option>
+        </select>
+      </label>
+      <label>Date of birth
+        <input id="dob" type="date" />
+      </label>
       <button type="submit">Save Dog</button>
+      <div id="saveMsg" style="margin-top:8px;"></div>
     </form>
-    <h2>Your Dogs</h2>
-    <ul id="dog-list"></ul>
+    <small>POC defaults: <code>category='Unregistered Parent'</code>, <code>breed_content_source='declared'</code>, <code>visibility='public'</code>.</small>
+  </div>
+
+  <div id="listCard" class="card" style="display:none;">
+    <h3>Your Dogs</h3>
+    <ul id="dogList"></ul>
   </div>
 
   <script>
+    // Your Supabase values
     const sb = supabase.createClient(
       "https://brmqfmnnyxbfzutlhgzz.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI"
     );
 
-    // When returning from magic link, exchange code for a session
+    // Finish login when returning from the email link
     (async () => {
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
       if (code) {
         const { error } = await sb.auth.exchangeCodeForSession({ code });
-        if (error) console.error('exchangeCodeForSession:', error.message);
-        // Clean up URL
+        if (error) console.error('exchangeCodeForSession:', error?.message || error);
+        // Clean the URL
         window.history.replaceState({}, document.title, url.origin + url.pathname);
       }
     })();
-<script>
-// replace your current click handler with this
-document.getElementById('login-btn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  console.log('[auth] sending OTP to', email);
-  try {
-    const { data, error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin }
+
+    // Send magic link
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const { data, error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin }
+      });
+      document.getElementById('authMsg').textContent =
+        error ? `Error: ${error.message}` : 'Magic link sent! Check your email.';
+      console.log('[auth]', { data, error });
     });
-    console.log('[auth] result', { data, error });
-    alert(error ? `ERROR: ${error.message}` : 'Magic link sent! Check your email.');
-  } catch (e) {
-    console.error(e);
-    alert(`ERROR: ${e.message}`);
-  }
-});
-</script>
-  
+
+    // Auth → UI
     sb.auth.onAuthStateChange(() => refreshUI());
 
     async function refreshUI() {
       const { data: { user } } = await sb.auth.getUser();
-      if (user) {
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('app-section').style.display = 'block';
-        document.getElementById('user-info').textContent = `Signed in as ${user.email}`;
-        loadDogs();
-      } else {
-        document.getElementById('auth-section').style.display = 'block';
-        document.getElementById('app-section').style.display = 'none';
+      if (!user) {
+        document.getElementById('auth-section')?.style && (document.getElementById('auth-section').style.display = 'block');
+        document.getElementById('addDogCard').style.display = 'none';
+        document.getElementById('listCard').style.display = 'none';
+        return;
+      }
+      document.getElementById('who').style.display = 'block';
+      document.getElementById('who').textContent = `Signed in as ${user.email}`;
+
+      // Look up your people row (created automatically by the SQL trigger)
+      const { data, error } = await sb
+        .from('people')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (error || !data) {
+        document.getElementById('personMsg').style.display = 'block';
+        document.getElementById('personMsg').textContent =
+          error ? `Error loading your profile: ${error.message}` : 'Profile not ready yet, refresh in a moment.';
+        document.getElementById('addDogCard').style.display = 'none';
+        document.getElementById('listCard').style.display = 'none';
+        return;
+      }
+      document.getElementById('personMsg').style.display = 'none';
+
+      window._personId = data.id;
+      document.getElementById('addDogCard').style.display = 'block';
+      document.getElementById('listCard').style.display = 'block';
+      await loadDogs();
+    }
+
+    async function loadDogs() {
+      const { data, error } = await sb
+        .from('dogs')
+        .select('id,registered_name,call_name,sex,dob,category,created_at')
+        .eq('breeder_id', window._personId)
+        .order('created_at', { ascending: false });
+
+      const list = document.getElementById('dogList');
+      if (error) { list.innerHTML = `<li style="color:#b00;">${error.message}</li>`; return; }
+      if (!data || data.length === 0) { list.innerHTML = '<li>No dogs yet.</li>'; return; }
+
+      list.innerHTML = '';
+      for (const d of data) {
+        const li = document.createElement('li');
+        const cn = d.call_name ? ` • call: ${d.call_name}` : '';
+        const dob = d.dob ? ` • DOB ${d.dob}` : '';
+        li.textContent = `${d.registered_name} (${d.sex}) • ${d.category}${cn}${dob}`;
+        list.appendChild(li);
+      }
+    }
+
+    document.getElementById('dogForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        category: 'Unregistered Parent',
+        registered_name: document.getElementById('regName').value,
+        call_name: document.getElementById('callName').value || null,
+        sex: document.getElementById('sex').value,
+        dob: document.getElementById('dob').value || null,
+        breed_content_source: 'declared',
+        breeder_id: window._personId,
+        reg_number: null,
+        microchip: null,
+        image_url: null,
+        breed_components: null,
+        sire_id: null,
+        dam_id: null,
+        litter_id: null,
+        visibility: 'public'
+      };
+      const { error } = await sb.from('dogs').insert(payload);
+      const saveMsg = document.getElementById('saveMsg');
+      if (error) { saveMsg.textContent = error.message; return; }
+      saveMsg.textContent = 'Saved.';
+      e.target.reset();
+      await loadDogs();
+    });
+
+    refreshUI();
+  </script>
+</body>
+</html>
