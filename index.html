@@ -44,6 +44,16 @@
   .node img{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #e8dfda}
   .col:first-child .node::before{display:none}
   .node::before{content:""; position:absolute; top:50%; left:-10px; width:10px; height:1px; background:#e0d5cf; transform:translateY(-50%);}
+
+  /* Hero sizing tweaks */
+  .heroLogo{width:260px; height:auto; object-fit:contain; border-radius:12px}
+  .heroTitle{margin:0; font-size:22px; letter-spacing:.2px}
+  .heroSlogan{margin-top:4px; font-size:14px}
+  @media (max-width:700px){
+    .heroLogo{width:200px}
+    .heroTitle{font-size:20px}
+    .heroSlogan{font-size:13px}
+  }
 </style>
 </head>
 <body>
@@ -54,47 +64,49 @@
 
   <!-- HOME -->
   <div id="route-home" class="card">
-    <!-- Hero: bigger logo left, name + slogan right -->
+    <!-- Hero: bigger logo left, smaller name + slogan right -->
     <div class="row" style="align-items:center;gap:18px;margin-bottom:12px">
       <img
         src="https://brmqfmnnyxbfzutlhgzz.supabase.co/storage/v1/object/public/branding/transparent%20logo.png"
         alt="Companion Dog Project Logo"
-        style="width:180px;height:auto;object-fit:contain;border-radius:12px"
+        class="heroLogo"
       />
       <div>
-        <h1 style="margin:0">Companion Dog Registry</h1>
-        <div class="muted" style="margin-top:4px">Setting the Standard for Companion Dog Breeding.</div>
+        <h1 class="heroTitle">Companion Dog Registry</h1>
+        <div class="muted heroSlogan">Setting the Standard for Companion Dog Breeding.</div>
       </div>
     </div>
 
     <!-- Three quadrants -->
     <div class="quads">
       <!-- Member Breeders -->
-      <section class="quad">
+      <section class="quad" id="memberQuad">
         <h3>Member Breeders</h3>
         <p>Access the registry to manage your dog’s records; register dogs or litters.</p>
 
-        <!-- One clear action -->
-        <button class="btn primary" id="openMemberLogin">Log in as Member</button>
-
-        <!-- Slide-down email box (appears when clicking the button) -->
-        <div id="memberLoginPanel" class="hidden" style="margin-top:10px">
-          <div class="row">
-            <div class="col">
-              <label>Email for login link</label>
-              <input id="mlEmail" placeholder="you@example.com">
-            </div>
-            <div class="col" style="align-self:flex-end">
-              <button class="btn" id="sendMagic">Send Login Link</button>
+        <!-- If NOT signed in: show login button + email panel -->
+        <div id="memberLoggedOut">
+          <button class="btn primary" id="openMemberLogin">Log in as Member</button>
+          <div id="memberLoginPanel" class="hidden" style="margin-top:10px">
+            <div class="row">
+              <div class="col">
+                <label>Email for login link</label>
+                <input id="mlEmail" placeholder="you@example.com">
+              </div>
+              <div class="col" style="align-self:flex-end">
+                <button class="btn" id="sendMagic">Send Login Link</button>
+              </div>
             </div>
           </div>
-          <div class="row" style="margin-top:8px">
-            <button class="btn" data-route="submit">Go to Member Area</button>
-          </div>
+          <a class="btn" href="#" id="applyLink" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
         </div>
 
-        <!-- Apply link -->
-        <a class="btn" href="#" id="applyLink" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
+        <!-- If signed in: show status + member area button -->
+        <div id="memberLoggedIn" class="hidden">
+          <div class="muted" id="memberHello" style="margin-bottom:10px"></div>
+          <button class="btn primary" data-route="submit">Go to Member Area</button>
+          <a class="btn" href="#" id="applyLink2" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
+        </div>
       </section>
 
       <!-- Search the Registry -->
@@ -196,7 +208,6 @@
   const routes=['home','submit','review','dog','browse'];
   function show(r){ routes.forEach(x=> $(`route-${x}`)?.classList.toggle('hidden', x!==r)); }
 
-  // Helpers
   const showEl = (el, show=true)=> el.classList.toggle('hidden', !show);
 
   // Router buttons (review loads data)
@@ -230,13 +241,18 @@
     }
   });
 
-  // Clear, reliable sign-in badge
+  // Sign-in badge + role-aware sections + member quadrant mode
   async function initAuth(){
     try{
       const { data:{ user } } = await sb.auth.getUser();
       if (user) {
+        // Header badge
         $('userBadge').textContent = `Signed in: ${user.email}`;
-        // Role-aware registrar tile
+        // Member quadrant: show "Go to Member Area"
+        showEl($('memberLoggedOut'), false);
+        showEl($('memberLoggedIn'), true);
+        $('memberHello').textContent = `You are signed in as ${user.email}.`;
+        // Registrar tile
         const { data:r } = await sb.from('user_roles').select('role').eq('auth_user_id', user.id);
         const roles = (r||[]).map(x=>x.role);
         if (roles.includes('registrar') || roles.includes('admin')) {
@@ -244,9 +260,13 @@
         }
       } else {
         $('userBadge').textContent = 'Not signed in';
+        showEl($('memberLoggedOut'), true);
+        showEl($('memberLoggedIn'), false);
       }
     }catch{
       $('userBadge').textContent = 'Not signed in';
+      showEl($('memberLoggedOut'), true);
+      showEl($('memberLoggedIn'), false);
     }
   }
 
