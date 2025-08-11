@@ -4,33 +4,81 @@
 <meta charset="utf-8" />
 <title>Companion Dog Registry — Portal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <style>
   :root{
-    --bg:#faf7f4; --panel:#ffffff; --ink:#2a1f1b; --muted:#6b554c; --line:#e8dfda;
-    --accent:#7c3aed; --accent-2:#b48cfb; --radius:14px; --shadow:0 8px 24px rgba(60,40,30,.08);
+    /* Warm, soft base with sage + lemon accents; purple used sparingly */
+    --bg: #fbf9f2;            /* soft warm (hint of lemon) */
+    --panel: #ffffff;
+    --ink: #2a1f1b;           /* deep warm brownish, not black */
+    --muted: #6b5a52;         /* warm muted text */
+    --line: #e9e2da;          /* warm divider */
+    --accent: #7c3aed;        /* your purple (kept as accent) */
+    --sage: #9bb59b;          /* soft sage */
+    --lemon: #f6f0c8;         /* pale lemon wash */
+    --radius: 14px;
+    --shadow: 0 8px 24px rgba(60,40,30,.07);
   }
+
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,#f7f2ee,#faf7f4);color:var(--ink);
-    font:16px/1.5 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  body{
+    margin:0;
+    background: linear-gradient(180deg, #fdfcf8 0%, var(--bg) 100%);
+    color:var(--ink);
+    font:16px/1.55 "Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  }
+
   .wrap{max-width:1100px;margin:28px auto;padding:0 16px}
   header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-  .muted{color:var(--muted)} .hidden{display:none}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid #e7ddd7;background:#fff;cursor:pointer}
+  .muted{color:var(--muted)}
+  .hidden{display:none}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--shadow);
+  }
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 14px;border-radius:12px;border:1px solid #e7ddd7;background:#fff;
+    cursor:pointer;font-weight:600
+  }
   .btn:hover{border-color:#e0d5cf}
-  .primary{background:linear-gradient(90deg,var(--accent),#6d28d9);color:#fff;border:none}
-  input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #e7ddd7;background:#fff;color:var(--ink)}
+  .primary{
+    background:linear-gradient(90deg,var(--accent),#6d28d9);
+    color:#fff;border:none
+  }
+
+  input,select{
+    width:100%;padding:12px;border-radius:12px;border:1px solid #e7ddd7;background:#fff;color:var(--ink)
+  }
   label{display:block;font-size:12px;color:#59453e;margin:12px 0 6px}
-  .row{display:flex;gap:12px;flex-wrap:wrap}.row>.col{flex:1 1 220px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>.col{flex:1 1 220px}
 
   /* Quadrants */
   .quads{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media (max-width:900px){ .quads{grid-template-columns:1fr} }
-  .quad{padding:18px;border:1px solid var(--line);border-radius:14px;background:#fff}
-  .quad h3{margin:0 0 6px}
+  .quad{
+    padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;
+    background-image: linear-gradient(0deg, rgba(155,181,155,0.06), rgba(155,181,155,0.0));
+  }
+  .quad h3{
+    margin:0 0 6px;
+    font-family:"Cormorant Garamond", serif;
+    font-weight:600; letter-spacing:.2px; font-size:22px;
+  }
   .quad p{margin:0 0 12px;color:var(--muted)}
+
   .quad .stack{display:flex;flex-direction:column;gap:8px}
 
   /* Lists */
@@ -45,14 +93,23 @@
   .col:first-child .node::before{display:none}
   .node::before{content:""; position:absolute; top:50%; left:-10px; width:10px; height:1px; background:#e0d5cf; transform:translateY(-50%);}
 
-  /* Hero sizing tweaks */
-  .heroLogo{width:260px; height:auto; object-fit:contain; border-radius:12px}
-  .heroTitle{margin:0; font-size:22px; letter-spacing:.2px}
-  .heroSlogan{margin-top:4px; font-size:14px}
+  /* Hero */
+  .heroLogo{width:320px; height:auto; object-fit:contain; border-radius:12px}
+  .heroTitle{
+    margin:0; font-size:26px; letter-spacing:.3px;
+    font-family:"Cormorant Garamond", serif; font-weight:700;
+  }
+  .heroSlogan{margin-top:6px; font-size:16px; font-weight:600; color:#5a4a42}
   @media (max-width:700px){
-    .heroLogo{width:200px}
-    .heroTitle{font-size:20px}
-    .heroSlogan{font-size:13px}
+    .heroLogo{width:240px}
+    .heroTitle{font-size:22px}
+    .heroSlogan{font-size:14px}
+  }
+
+  /* Soft highlight strip behind hero text for subtle warmth */
+  .heroText{
+    background: linear-gradient(90deg, rgba(246,240,200,0.55), rgba(246,240,200,0));
+    padding:8px 10px; border-radius:10px;
   }
 </style>
 </head>
@@ -64,16 +121,16 @@
 
   <!-- HOME -->
   <div id="route-home" class="card">
-    <!-- Hero: bigger logo left, smaller name + slogan right -->
+    <!-- Hero: bigger logo left, balanced name + slogan right -->
     <div class="row" style="align-items:center;gap:18px;margin-bottom:12px">
       <img
-        src="https://brmqfmnnyxbfzutlhgzz.supabase.co/storage/v1/object/public/branding/companion%20dog%20project%20(2).svg"
+        src="https://brmqfmnnyxbfzutlhgzz.supabase.co/storage/v1/object/public/branding/transparent%20logo.png?v=2"
         alt="Companion Dog Project Logo"
         class="heroLogo"
       />
-      <div>
+      <div class="heroText">
         <h1 class="heroTitle">Companion Dog Registry</h1>
-        <div class="muted heroSlogan">Setting the Standard for Companion Dog Breeding.</div>
+        <div class="heroSlogan">Setting the Standard for Companion Dog Breeding.</div>
       </div>
     </div>
 
@@ -84,7 +141,7 @@
         <h3>Member Breeders</h3>
         <p>Access the registry to manage your dog’s records; register dogs or litters.</p>
 
-        <!-- If NOT signed in: show login button + email panel -->
+        <!-- Logged-out view -->
         <div id="memberLoggedOut">
           <button class="btn primary" id="openMemberLogin">Log in as Member</button>
           <div id="memberLoginPanel" class="hidden" style="margin-top:10px">
@@ -101,7 +158,7 @@
           <a class="btn" href="#" id="applyLink" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
         </div>
 
-        <!-- If signed in: show status + member area button -->
+        <!-- Logged-in view -->
         <div id="memberLoggedIn" class="hidden">
           <div class="muted" id="memberHello" style="margin-bottom:10px"></div>
           <button class="btn primary" data-route="submit">Go to Member Area</button>
@@ -144,13 +201,13 @@
   <!-- SUBMIT DOG -->
   <div id="route-submit" class="card hidden">
     <div class="row"><button class="btn" data-route="home">← Back</button></div>
-    <h2>Submit an Individual Dog</h2>
+    <h2 style="font-family:'Cormorant Garamond',serif;margin-top:0">Submit an Individual Dog</h2>
     <div class="row">
       <div class="col"><label>Breed content</label><select id="breedKey"></select></div>
       <div class="col"><label>Category</label><select id="category"><option>Full</option><option>Limited</option><option>Unregistered Parent</option></select></div>
     </div>
-    <div id="reqBox" class="card" style="background:#fcf9f7;border-color:#efe6e1;display:none">
-      <div style="font-weight:600">Requirements</div>
+    <div id="reqBox" class="card" style="background:var(--lemon);border-color:#efe6d8;display:none">
+      <div style="font-weight:700;font-family:'Cormorant Garamond',serif">Requirements</div>
       <div id="reqText" class="muted" style="margin-top:6px"></div>
     </div>
     <div class="row">
@@ -179,7 +236,7 @@
   <!-- REGISTRAR REVIEW -->
   <div id="route-review" class="card hidden">
     <div class="row"><button class="btn" data-route="home">← Back</button></div>
-    <h2>Pending Submissions</h2>
+    <h2 style="font-family:'Cormorant Garamond',serif;margin-top:0">Pending Submissions</h2>
     <div id="pendingList" style="margin-top:10px"></div>
   </div>
 
@@ -187,14 +244,14 @@
   <div id="route-dog" class="card hidden">
     <div class="row"><button class="btn" data-route="home">← Back</button></div>
     <div id="dogHeader"></div>
-    <h3 style="margin-top:12px">Pedigree (5 generations)</h3>
+    <h3 style="margin-top:12px;font-family:'Cormorant Garamond',serif">Pedigree (5 generations)</h3>
     <div id="pedigree" class="tree"></div>
   </div>
 
   <!-- BROWSE DOGS (public) -->
   <div id="route-browse" class="card hidden">
     <div class="row"><button class="btn" data-route="home">← Back</button></div>
-    <h2>Approved Dogs</h2>
+    <h2 style="font-family:'Cormorant Garamond',serif;margin-top:0">Approved Dogs</h2>
     <div id="dogList" class="list"></div>
   </div>
 </div>
@@ -207,10 +264,9 @@
   const $ = id => document.getElementById(id);
   const routes=['home','submit','review','dog','browse'];
   function show(r){ routes.forEach(x=> $(`route-${x}`)?.classList.toggle('hidden', x!==r)); }
-
   const showEl = (el, show=true)=> el.classList.toggle('hidden', !show);
 
-  // Router buttons (review loads data)
+  // Router
   document.body.addEventListener('click',(e)=>{
     const btn=e.target.closest('[data-route]'); if(!btn) return;
     e.preventDefault();
@@ -227,7 +283,7 @@
     }
   });
 
-  // Magic link (passwordless login)
+  // Magic link login
   document.addEventListener('click', async (e)=>{
     if (e.target && e.target.id === 'sendMagic') {
       const email = ($('mlEmail').value || '').trim();
@@ -241,18 +297,15 @@
     }
   });
 
-  // Sign-in badge + role-aware sections + member quadrant mode
+  // Sign-in state + role-aware tiles + member quadrant swap
   async function initAuth(){
     try{
       const { data:{ user } } = await sb.auth.getUser();
       if (user) {
-        // Header badge
         $('userBadge').textContent = `Signed in: ${user.email}`;
-        // Member quadrant: show "Go to Member Area"
         showEl($('memberLoggedOut'), false);
         showEl($('memberLoggedIn'), true);
         $('memberHello').textContent = `You are signed in as ${user.email}.`;
-        // Registrar tile
         const { data:r } = await sb.from('user_roles').select('role').eq('auth_user_id', user.id);
         const roles = (r||[]).map(x=>x.role);
         if (roles.includes('registrar') || roles.includes('admin')) {
@@ -333,14 +386,13 @@
     if(e.target && e.target.id==='submitBtn'){
       const { data:{ user: u } } = await sb.auth.getUser(); user=u;
       if(!user){ alert('Sign in first via magic link.'); return; }
-      // fetch personId
       if(!personId){
         const { data:people } = await sb.from('people').select('id').eq('auth_user_id', user.id).maybeSingle();
         personId = people?.id || null;
         if(!personId){ alert('No breeder profile linked to this account yet.'); return; }
       }
       const cat = $('category').value;
-      const chip = $('microchip').value.trim();
+      const chip = ($('microchip').value || '').trim();
       if((cat==='Full'||cat==='Limited') && !chip){ alert('Microchip required for Full/Limited.'); return; }
       let p1=null,p2=null;
       if($('photo1').files[0]) p1 = await uploadTo('dog-photos', $('photo1').files[0], 'photo1');
@@ -352,8 +404,8 @@
         breeder_person_id: personId,
         category: cat,
         breed_key: $('breedKey').value,
-        registered_name: $('regName').value.trim(),
-        call_name: $('callName').value.trim(),
+        registered_name: ($('regName').value || '').trim(),
+        call_name: ($('callName').value || '').trim(),
         sex: $('sex').value,
         dob: $('dob').value || null,
         microchip: chip || null,
@@ -429,7 +481,7 @@
       <div class="row" style="align-items:center">
         <img src="${dog.image_url_primary||''}" style="width:80px;height:80px;border-radius:14px;border:1px solid var(--line);object-fit:cover" onerror="this.style.display='none'">
         <div>
-          <h2 style="margin:0">${dog.registered_name}</h2>
+          <h2 style="margin:0;font-family:'Cormorant Garamond',serif">${dog.registered_name}</h2>
           <div class="muted">${dog.reg_number||''} • ${dog.sex||''} • ${dog.dob||''}</div>
         </div>
       </div>`;
@@ -437,7 +489,7 @@
     const wrap = $('pedigree'); wrap.innerHTML='';
     if(!ped || !Array.isArray(ped)){ wrap.innerHTML = '<div class="muted">Pedigree not available yet.</div>'; show('dog'); return; }
     const cols=[[],[],[],[],[]]; ped.forEach(n=> cols[Math.min(n.gen,4)].push(n));
-    cols.forEach((list, i)=>{
+    cols.forEach((list)=>{
       const col = document.createElement('div'); col.className='col';
       list.forEach(n=>{
         const div = document.createElement('div'); div.className='node';
