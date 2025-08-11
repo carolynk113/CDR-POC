@@ -9,7 +9,7 @@
 <style>
   :root{
     --bg:#fbf9f2; --panel:#fff; --ink:#2a1f1b; --muted:#6b5a52; --line:#e9e2da;
-    --accent:#7c3aed; --sage:#9bb59b; --lemon:#f6f0c8; --lemon-ink:#5a4a42;
+    --accent:#7c3aed; --lemon:#f6f0c8; --lemon-ink:#5a4a42;
     --radius:14px; --shadow:0 8px 24px rgba(60,40,30,.07);
   }
   *{box-sizing:border-box}
@@ -31,30 +31,48 @@
   input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #e7ddd7;background:#fff;color:var(--ink)}
   label{display:block;font-size:12px;color:#59453e;margin:12px 0 6px}
   .row{display:flex;gap:12px;flex-wrap:wrap}.row>.col{flex:1 1 220px}
+
+  /* Quadrants */
   .quads{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media (max-width:900px){ .quads{grid-template-columns:1fr} }
   .quad{padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;background-image:linear-gradient(0deg, rgba(246,240,200,0.22), rgba(246,240,200,0))}
   .quad h3{margin:0 0 6px;font-family:"Cormorant Garamond",serif;font-weight:600;letter-spacing:.2px;font-size:22px}
   .quad p{margin:0 0 12px;color:var(--muted)}
   .quad .stack{display:flex;flex-direction:column;gap:8px}
+
+  /* Lists */
   .list{border-top:1px solid var(--line);margin-top:8px}
   .list .rowi{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+
+  /* Pedigree (grid columns as placeholder tree) */
   .tree{--cols:5;--gap:18px;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap);padding:6px 0}
   .col{display:flex;flex-direction:column;gap:10px}
   .node{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center}
   .node img{width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #e8dfda}
   .col:first-child .node::before{display:none}
   .node::before{content:"";position:absolute;top:50%;left:-10px;width:10px;height:1px;background:#e0d5cf;transform:translateY(-50%)}
+
+  /* Hero */
   .hero{display:flex;align-items:center;gap:18px;margin-bottom:12px;background:linear-gradient(90deg, rgba(246,240,200,0.65), rgba(246,240,200,0));padding:10px;border-radius:12px}
   .heroLogo{width:340px;height:auto;object-fit:contain}
   .heroTitle{margin:0;font-size:30px;letter-spacing:.3px;font-family:"Cormorant Garamond",serif;font-weight:700}
   .heroSlogan{margin-top:6px;font-size:18px;font-weight:600;color:var(--lemon-ink)}
-  @media (max-width:700px){ .hero{flex-direction:column;align-items:center;text-align:center;padding:14px}.heroLogo{width:260px}.heroTitle{font-size:26px}.heroSlogan{font-size:17px} }
+  @media (max-width:700px){
+    .hero{flex-direction:column;align-items:center;text-align:center;padding:14px}
+    .heroLogo{width:260px}
+    .heroTitle{font-size:26px}
+    .heroSlogan{font-size:17px}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><div class="muted" id="userBadge">Checking sign-in…</div></header>
+  <header>
+    <div class="muted" id="userBadge">Checking sign‑in…</div>
+    <div>
+      <button class="btn hidden" id="logoutBtn">Log out</button>
+    </div>
+  </header>
 
   <!-- HOME -->
   <div id="route-home" class="card">
@@ -86,17 +104,17 @@
               </div>
             </div>
           </div>
-          <a class="btn" href="mailto:companiondogregistry@gmail.com?subject=Breeder%20Application" id="applyLink" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
+          <a class="btn" href="mailto:companiondogregistry@gmail.com?subject=Breeder%20Application" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
         </div>
 
         <!-- Logged-in -->
         <div id="memberLoggedIn" class="hidden">
           <div class="muted" id="memberHello" style="margin-bottom:10px"></div>
 
-          <!-- Shown only if user already has role -->
+          <!-- If user already has breeder/admin role -->
           <button class="btn primary hidden" id="toMember" data-route="submit">Go to Member Area</button>
 
-          <!-- Shown if user is logged-in but not approved yet -->
+          <!-- If user is logged in but not yet approved -->
           <div id="noRolePanel" class="card hidden" style="margin-top:12px;background:#FFF7D1;border-color:#F3E3A2">
             <div style="font-weight:700;font-family:'Cormorant Garamond',serif">Enter Access Code</div>
             <div class="row">
@@ -106,11 +124,11 @@
             <div class="muted" style="margin-top:6px;font-size:13px">If you don’t have a code, click “Apply Here”.</div>
           </div>
 
-          <a class="btn" href="mailto:companiondogregistry@gmail.com?subject=Breeder%20Application" id="applyLink2" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
+          <a class="btn" href="mailto:companiondogregistry@gmail.com?subject=Breeder%20Application" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
         </div>
       </section>
 
-      <!-- Search -->
+      <!-- Search the Registry -->
       <section class="quad">
         <h3>Search the Registry</h3>
         <p>View breeders & search the registry.</p>
@@ -121,7 +139,7 @@
         </div>
       </section>
 
-      <!-- Owners -->
+      <!-- Puppy & Dog Owners -->
       <section class="quad" style="grid-column:1 / -1">
         <h3>Puppy & Dog Owners</h3>
         <p>Add or update your dog’s info, share health updates, and participate in surveys.</p>
@@ -131,7 +149,7 @@
         </div>
       </section>
 
-      <!-- Registrar/Admin -->
+      <!-- Registrar/Admin (role-aware) -->
       <section class="quad hidden" id="quadRegistrar">
         <h3>Registrar</h3>
         <p>Pending registrations and approvals.</p>
@@ -177,7 +195,7 @@
     </div>
   </div>
 
-  <!-- REVIEW -->
+  <!-- REGISTRAR REVIEW -->
   <div id="route-review" class="card hidden">
     <div class="row"><button class="btn" data-route="home">← Back</button></div>
     <h2 style="font-family:'Cormorant Garamond',serif;margin-top:0">Pending Submissions</h2>
@@ -210,7 +228,7 @@
   const show = r => routes.forEach(x => $(`route-${x}`)?.classList.toggle('hidden', x!==r));
   const showEl = (el,on=true)=> el?.classList.toggle('hidden', !on);
 
-  // --- Auth redirect: turn magic-link into session ---
+  // --- Magic-link return -> session ---
   async function handleAuthRedirect(){
     const href = window.location.href;
     if (href.includes('code=') || href.includes('access_token=')) {
@@ -221,18 +239,18 @@
     }
   }
 
-  // --- Update header + member quadrant; returns role flags ---
+  // --- Update UI based on auth & role; returns flags ---
   async function refreshAuthUI(){
     const { data:{ user } } = await sb.auth.getUser();
     let hasBreeder=false, isAdmin=false;
 
     if (user) {
       $('userBadge').textContent = `Signed in: ${user.email}`;
+      showEl($('logoutBtn'), true);
       showEl($('memberLoggedOut'), false);
       showEl($('memberLoggedIn'), true);
       $('memberHello').textContent = `You are signed in as ${user.email}.`;
 
-      // Fetch role
       try{
         const { data:r } = await sb.from('user_roles').select('role').eq('auth_user_id', user.id);
         const roles = (r||[]).map(x=>x.role);
@@ -240,27 +258,28 @@
         isAdmin = roles.includes('admin');
       }catch{}
 
-      // Registrar/Admin tile
       if (isAdmin) $('quadRegistrar')?.classList.remove('hidden');
 
-      // Toggle Member Area vs Access Code panel
+      // Toggle “Go to Member Area” vs Access Code
       showEl($('toMember'), (hasBreeder || isAdmin));
       showEl($('noRolePanel'), !(hasBreeder || isAdmin));
     } else {
       $('userBadge').textContent = 'Not signed in';
+      showEl($('logoutBtn'), false);
       showEl($('memberLoggedOut'), true);
       showEl($('memberLoggedIn'), false);
     }
     return { user, hasBreeder, isAdmin };
   }
 
-  // --- UI events ---
+  // --- Events ---
   document.addEventListener('click', (e)=>{
     if (e.target?.id === 'openMemberLogin') {
       showEl($('memberLoginPanel'), $('memberLoginPanel')?.classList.contains('hidden'));
     }
   });
 
+  // Send magic link
   document.addEventListener('click', async (e)=>{
     if (e.target?.id === 'sendMagic') {
       const email = ($('mlEmail').value||'').trim();
@@ -274,6 +293,7 @@
     }
   });
 
+  // Redeem invite code -> grant role
   document.addEventListener('click', async (e)=>{
     if (e.target?.id === 'redeemCode') {
       const code = ($('accessCode').value||'').trim();
@@ -286,6 +306,14 @@
     }
   });
 
+  // Header logout button
+  $('logoutBtn').addEventListener('click', async ()=>{
+    await sb.auth.signOut();
+    await refreshAuthUI();
+    show('home');
+  });
+
+  // Route buttons
   document.body.addEventListener('click',(e)=>{
     const btn = e.target.closest('[data-route]'); if(!btn) return;
     e.preventDefault();
@@ -389,7 +417,7 @@
     }
   });
 
-  // Registrar review (placeholder wiring)
+  // Registrar Review (placeholder)
   async function loadPending(){
     const { data, error } = await sb.from('dog_submissions')
       .select('id,registered_name,category,breed_key,created_at,photo_primary_url')
@@ -439,7 +467,7 @@
     list.onclick=(e)=>{ const open=e.target.closest('[data-open]'); if(open){ openDogProfile(open.getAttribute('data-open')); } };
   }
 
-  // Dog profile + 5-gen
+  // Dog profile
   async function openDogProfile(dogId){
     const { data:dog, error:e1 } = await sb.from('dogs').select('id,reg_number,registered_name,call_name,image_url_primary,sex,dob').eq('id',dogId).maybeSingle();
     if(e1||!dog){ alert('Could not load dog'); return; }
@@ -473,10 +501,10 @@
     await handleAuthRedirect();
     const state = await refreshAuthUI();
 
-    // If already approved, land in Member area, else stay Home
+    // If just logged in and approved, land in Member area; else Home
     if (state.user && (state.hasBreeder || state.isAdmin)) show('submit'); else show('home');
 
-    // React to future auth state changes
+    // React to auth state changes
     sb.auth.onAuthStateChange(async () => { await refreshAuthUI(); });
 
     await loadBreeds();
@@ -484,3 +512,4 @@
 </script>
 </body>
 </html>
+
