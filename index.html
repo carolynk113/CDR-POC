@@ -54,12 +54,12 @@
 
   <!-- HOME -->
   <div id="route-home" class="card">
-    <!-- Hero: logo left, name + slogan right -->
+    <!-- Hero: bigger logo left, name + slogan right -->
     <div class="row" style="align-items:center;gap:18px;margin-bottom:12px">
       <img
         src="https://brmqfmnnyxbfzutlhgzz.supabase.co/storage/v1/object/public/branding/transparent%20logo.png"
         alt="Companion Dog Project Logo"
-        style="width:88px;height:88px;object-fit:contain;border-radius:16px;border:1px solid var(--line)"
+        style="width:180px;height:auto;object-fit:contain;border-radius:12px"
       />
       <div>
         <h1 style="margin:0">Companion Dog Registry</h1>
@@ -73,28 +73,38 @@
       <section class="quad">
         <h3>Member Breeders</h3>
         <p>Access the registry to manage your dog’s records; register dogs or litters.</p>
-        <div class="stack">
+
+        <!-- One clear action -->
+        <button class="btn primary" id="openMemberLogin">Log in as Member</button>
+
+        <!-- Slide-down email box (appears when clicking the button) -->
+        <div id="memberLoginPanel" class="hidden" style="margin-top:10px">
           <div class="row">
             <div class="col">
-              <label>Email for magic link</label>
+              <label>Email for login link</label>
               <input id="mlEmail" placeholder="you@example.com">
             </div>
             <div class="col" style="align-self:flex-end">
-              <button class="btn primary" id="sendMagic">Send Magic Link</button>
+              <button class="btn" id="sendMagic">Send Login Link</button>
             </div>
           </div>
-          <button class="btn" data-route="submit">Log In to Manage / Add Dogs & Litters</button>
-          <a class="btn" href="#" id="applyLink">Want to Join as a Breeder? Apply Here</a>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" data-route="submit">Go to Member Area</button>
+          </div>
         </div>
+
+        <!-- Apply link -->
+        <a class="btn" href="#" id="applyLink" style="margin-top:10px">Want to Join as a Breeder? Apply Here</a>
       </section>
 
       <!-- Search the Registry -->
       <section class="quad">
         <h3>Search the Registry</h3>
-        <p>View breeders & search the registry. Browse breeders, find available puppies, and view registered dogs.</p>
+        <p>View breeders & search the registry.</p>
         <div class="stack">
           <button class="btn" id="browseDogs">Open Registry</button>
           <button class="btn" id="dirDisabled" disabled>Breeder Directory (coming soon)</button>
+          <button class="btn" disabled>Upcoming & Available Puppies (coming soon)</button>
         </div>
       </section>
 
@@ -180,4 +190,253 @@
 <script>
   // ====== SUPABASE CONFIG ======
   const SUPABASE_URL = "https://brmqfmnnyxbfzutlhgzz.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybXFmbW5ueXhiZnp1dGxoZ3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MjcxMDYsImV4cCI6MjA3MDQwMzEwNn0.FmkPloBzTbfLfs6vlqSerSqn51LOonNX7PVsdUB3tQI";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const $ = id => document.getElementById(id);
+  const routes=['home','submit','review','dog','browse'];
+  function show(r){ routes.forEach(x=> $(`route-${x}`)?.classList.toggle('hidden', x!==r)); }
+
+  // Helpers
+  const showEl = (el, show=true)=> el.classList.toggle('hidden', !show);
+
+  // Router buttons (review loads data)
+  document.body.addEventListener('click',(e)=>{
+    const btn=e.target.closest('[data-route]'); if(!btn) return;
+    e.preventDefault();
+    const r = btn.getAttribute('data-route');
+    show(r);
+    if(r==='review') loadPending();
+  });
+
+  // Member login panel toggle
+  document.addEventListener('click', (e)=>{
+    if (e.target && e.target.id === 'openMemberLogin') {
+      const panel = $('memberLoginPanel');
+      showEl(panel, panel.classList.contains('hidden')); // toggle
+    }
+  });
+
+  // Magic link (passwordless login)
+  document.addEventListener('click', async (e)=>{
+    if (e.target && e.target.id === 'sendMagic') {
+      const email = ($('mlEmail').value || '').trim();
+      if (!email) { alert('Enter your email.'); return; }
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+      });
+      if (error) { alert(error.message); return; }
+      alert('Login link sent. Open it on this device to finish logging in.');
+    }
+  });
+
+  // Clear, reliable sign-in badge
+  async function initAuth(){
+    try{
+      const { data:{ user } } = await sb.auth.getUser();
+      if (user) {
+        $('userBadge').textContent = `Signed in: ${user.email}`;
+        // Role-aware registrar tile
+        const { data:r } = await sb.from('user_roles').select('role').eq('auth_user_id', user.id);
+        const roles = (r||[]).map(x=>x.role);
+        if (roles.includes('registrar') || roles.includes('admin')) {
+          const q = $('quadRegistrar'); if(q) q.classList.remove('hidden');
+        }
+      } else {
+        $('userBadge').textContent = 'Not signed in';
+      }
+    }catch{
+      $('userBadge').textContent = 'Not signed in';
+    }
+  }
+
+  // ===== Submit page =====
+  let breedMap={}; let user=null; let personId=null;
+
+  async function loadBreeds(){
+    const { data } = await sb.from('breed_rules').select('breed_key, display_name, requirements').order('display_name');
+    const sel = $('breedKey'); if (!sel) return;
+    sel.innerHTML = ''; breedMap={};
+    (data||[]).forEach(row=>{
+      breedMap[row.breed_key] = { name: row.display_name, req: row.requirements };
+      const opt = document.createElement('option'); opt.value=row.breed_key; opt.textContent=row.display_name; sel.appendChild(opt);
+    });
+    updateRequirements();
+  }
+  function updateRequirements(){
+    const sel = $('breedKey'); const catSel = $('category');
+    if(!sel || !catSel) return;
+    const bk = sel.value; const cat = catSel.value;
+    const rule = breedMap[bk]?.req?.[cat.toLowerCase()] || null;
+    const box = $('reqBox'); const txt = $('reqText');
+    if(!rule){ box.style.display='none'; return; }
+    const tests = (rule.tests||[]).map(t=>t.replaceAll('_',' ').toUpperCase()).join(', ');
+    const bits=[];
+    if(tests) bits.push(`<strong>Health tests:</strong> ${tests}`);
+    if(rule.age){
+      const a=rule.age, arr=[];
+      if(a.male_months_min) arr.push(`M ≥ ${a.male_months_min} months`);
+      if(a.female_years_min) arr.push(`F ≥ ${a.female_years_min} years`);
+      if(a.female_third_heat) arr.push(`F ≥ 3rd heat`);
+      if(arr.length) bits.push(`<strong>Age:</strong> ${arr.join('; ')}`);
+    }
+    if(rule.notes) bits.push(`<em>${rule.notes}</em>`);
+    txt.innerHTML = bits.join('<br>'); box.style.display='block';
+  }
+  document.addEventListener('change', (e)=>{
+    if(e.target && (e.target.id==='breedKey' || e.target.id==='category')) updateRequirements();
+  });
+
+  function preview(file, slot){
+    const rd = new FileReader();
+    rd.onload = () => {
+      const img = document.createElement('img'); img.src = rd.result; img.style.width='60px'; img.style.height='60px'; img.style.borderRadius='10px'; img.style.border='1px solid #e8dfda';
+      if(slot===1){ $('thumbs').innerHTML=''; }
+      $('thumbs').appendChild(img);
+    };
+    if(file) rd.readAsDataURL(file);
+  }
+  document.addEventListener('change',(e)=>{
+    if(e.target && e.target.id==='photo1'){ preview(e.target.files[0],1); if($('photo2').files[0]) preview($('photo2').files[0],2); }
+    if(e.target && e.target.id==='photo2'){ $('thumbs').innerHTML=''; if($('photo1').files[0]) preview($('photo1').files[0],1); preview(e.target.files[0],2); }
+  });
+
+  async function uploadTo(bucket, file, prefix){
+    const ext = (file.name.split('.').pop()||'bin'); const path = `${(user?.id||'anon')}/${prefix}-${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from(bucket).upload(path, file, { upsert:false }); if(error) throw error;
+    if(bucket==='dog-photos'){ return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl; }
+    const { data:signed, error:e2 } = await sb.storage.from(bucket).createSignedUrl(path, 60*60*24*7);
+    if(e2) throw e2; return signed.signedUrl;
+  }
+
+  document.addEventListener('click', async (e)=>{
+    if(e.target && e.target.id==='submitBtn'){
+      const { data:{ user: u } } = await sb.auth.getUser(); user=u;
+      if(!user){ alert('Sign in first via magic link.'); return; }
+      // fetch personId
+      if(!personId){
+        const { data:people } = await sb.from('people').select('id').eq('auth_user_id', user.id).maybeSingle();
+        personId = people?.id || null;
+        if(!personId){ alert('No breeder profile linked to this account yet.'); return; }
+      }
+      const cat = $('category').value;
+      const chip = $('microchip').value.trim();
+      if((cat==='Full'||cat==='Limited') && !chip){ alert('Microchip required for Full/Limited.'); return; }
+      let p1=null,p2=null;
+      if($('photo1').files[0]) p1 = await uploadTo('dog-photos', $('photo1').files[0], 'photo1');
+      if($('photo2').files[0]) p2 = await uploadTo('dog-photos', $('photo2').files[0], 'photo2');
+      const primary = (document.querySelector('input[name=primary]:checked')?.value || '1');
+      const photo_primary_url = (primary==='1') ? (p1||p2) : (p2||p1);
+      const photo_secondary_url = (primary==='1') ? (p2||null) : (p1||null);
+      const payload = {
+        breeder_person_id: personId,
+        category: cat,
+        breed_key: $('breedKey').value,
+        registered_name: $('regName').value.trim(),
+        call_name: $('callName').value.trim(),
+        sex: $('sex').value,
+        dob: $('dob').value || null,
+        microchip: chip || null,
+        photo_primary_url, photo_secondary_url,
+        health_docs: []
+      };
+      if(!payload.registered_name){ alert('Registered name required.'); return; }
+      const { error } = await sb.from('dog_submissions').insert(payload);
+      if(error){ alert('Submit failed: ' + error.message); return; }
+      alert('Submitted for registrar review.'); show('home');
+    }
+  });
+
+  // Registrar Review
+  async function loadPending(){
+    const { data, error } = await sb.from('dog_submissions')
+      .select('id,registered_name,category,breed_key,created_at,photo_primary_url')
+      .eq('status','pending').order('created_at',{ascending:true});
+    if(error){ alert(error.message); return; }
+    const box = $('pendingList'); box.innerHTML='';
+    if(!data || data.length===0){ box.innerHTML='<div class="muted">No pending submissions.</div>'; return; }
+    data.forEach(row=>{
+      const item = document.createElement('div'); item.className='rowi';
+      item.innerHTML = `
+        <div style="display:flex;gap:10px;align-items:center">
+          ${row.photo_primary_url ? `<img src="${row.photo_primary_url}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #e8dfda">` : ''}
+          <div><strong>${row.registered_name}</strong><div class="muted">${row.category} • ${row.breed_key}</div></div>
+        </div>
+        <div><button class="btn" data-approve="${row.id}">Approve</button></div>`;
+      box.appendChild(item);
+    });
+    box.onclick = async (e)=>{
+      const btn = e.target.closest('[data-approve]'); if(!btn) return;
+      const id = btn.getAttribute('data-approve');
+      if(!confirm('Approve this submission?')) return;
+      const { data:dogId, error:err } = await sb.rpc('approve_dog_submission', { p_submission_id: id });
+      if(err){ alert('Approve failed: ' + err.message); return; }
+      await loadPending();
+      if(dogId){ openDogProfile(dogId); }
+    };
+  }
+
+  // Browse dogs (public)
+  $('browseDogs').addEventListener('click', async ()=>{
+    await loadDogs(); show('browse');
+  });
+  async function loadDogs(){
+    const { data, error } = await sb.from('dogs')
+      .select('id,reg_number,registered_name,image_url_primary')
+      .order('created_at',{ascending:false}).limit(50);
+    if(error){ alert(error.message); return; }
+    const list = $('dogList'); list.innerHTML='';
+    (data||[]).forEach(d=>{
+      const row = document.createElement('div'); row.className='rowi';
+      row.innerHTML = `
+        <div style="display:flex;gap:10px;align-items:center;cursor:pointer" data-open="${d.id}">
+          ${d.image_url_primary ? `<img src="${d.image_url_primary}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #e8dfda">` : ''}
+          <div><strong>${d.registered_name}</strong><div class="muted">${d.reg_number||''}</div></div>
+        </div>
+        <div><button class="btn" data-open="${d.id}">Open</button></div>`;
+      list.appendChild(row);
+    });
+    list.onclick = (e)=>{ const open = e.target.closest('[data-open]'); if(open){ openDogProfile(open.getAttribute('data-open')); } };
+  }
+
+  // Dog profile + 5-gen
+  async function openDogProfile(dogId){
+    const { data:dog, error:e1 } = await sb.from('dogs')
+      .select('id, reg_number, registered_name, call_name, image_url_primary, sex, dob')
+      .eq('id', dogId).maybeSingle();
+    if(e1 || !dog){ alert('Could not load dog'); return; }
+    $('dogHeader').innerHTML = `
+      <div class="row" style="align-items:center">
+        <img src="${dog.image_url_primary||''}" style="width:80px;height:80px;border-radius:14px;border:1px solid var(--line);object-fit:cover" onerror="this.style.display='none'">
+        <div>
+          <h2 style="margin:0">${dog.registered_name}</h2>
+          <div class="muted">${dog.reg_number||''} • ${dog.sex||''} • ${dog.dob||''}</div>
+        </div>
+      </div>`;
+    const { data:ped } = await sb.rpc('get_pedigree_5gen', { start_dog: dogId });
+    const wrap = $('pedigree'); wrap.innerHTML='';
+    if(!ped || !Array.isArray(ped)){ wrap.innerHTML = '<div class="muted">Pedigree not available yet.</div>'; show('dog'); return; }
+    const cols=[[],[],[],[],[]]; ped.forEach(n=> cols[Math.min(n.gen,4)].push(n));
+    cols.forEach((list, i)=>{
+      const col = document.createElement('div'); col.className='col';
+      list.forEach(n=>{
+        const div = document.createElement('div'); div.className='node';
+        const img = n.image_url_primary ? `<img src="${n.image_url_primary}">` : `<img src="" style="background:#f1ece8">`;
+        div.innerHTML = `${img}<div>${n.registered_name || '<span class="muted">Unknown</span>'}</div>`;
+        col.appendChild(div);
+      });
+      wrap.appendChild(col);
+    });
+    show('dog');
+  }
+
+  // Boot
+  (async function(){
+    await initAuth();
+    await loadBreeds();
+    show('home');
+  })();
+</script>
+</body>
+</html>
+
